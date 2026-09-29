@@ -72,6 +72,8 @@ object XlsxToHtml {
         var truncated = false
         var columnsInRow = 0
         var cellType: String? = null
+        var cellColumn = -1
+        val cellText = StringBuilder()
         var open = false
 
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
@@ -88,29 +90,48 @@ object XlsxToHtml {
                         rows++
                     }
 
-                    "c" -> cellType = parser.getAttributeValue(null, "t")
-
-                    "v", "t" -> {
-                        val raw = parser.nextText()
-                        if (open && columnsInRow < MAX_COLUMNS) {
-                            val text = if (cellType == "s") {
-                                strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
-                            } else {
-                                raw
-                            }
-                            out.append("<td>").append(OoxmlZip.escape(text)).append("</td>")
-                            columnsInRow++
-                        }
+                    "c" -> {
+                        cellType = parser.getAttributeValue(null, "t")
+                        cellColumn = columnIndex(parser.getAttributeValue(null, "r")) ?: columnsInRow
+                        cellText.setLength(0)
                     }
+
+                    // An inline rich-text string has one <t> per run; they join into one cell.
+                    "v", "t" -> cellText.append(parser.nextText())
                 }
 
-                XmlPullParser.END_TAG -> if (parser.name == "row" && open) {
-                    out.append("</tr>")
-                    open = false
+                XmlPullParser.END_TAG -> when (parser.name) {
+                    "c" -> if (open && cellColumn < MAX_COLUMNS) {
+                        // Blank cells are left out of the XML, so pad up to this cell's own column.
+                        while (columnsInRow < cellColumn) {
+                            out.append("<td></td>")
+                            columnsInRow++
+                        }
+                        val raw = cellText.toString()
+                        val text = if (cellType == "s") {
+                            strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
+                        } else {
+                            raw
+                        }
+                        out.append("<td>").append(OoxmlZip.escape(text)).append("</td>")
+                        columnsInRow++
+                    }
+
+                    "row" -> if (open) {
+                        out.append("</tr>")
+                        open = false
+                    }
                 }
             }
         }
         out.append("</table>")
         return Sheet(out.toString(), truncated)
+    }
+
+    /** "C12" → 2. Null when the reference is missing or malformed. */
+    internal fun columnIndex(reference: String?): Int? {
+        val letters = reference?.takeWhile { it.isLetter() }?.uppercase() ?: return null
+        if (letters.isEmpty()) return null
+        return letters.fold(0) { acc, c -> acc * 26 + (c - 'A' + 1) } - 1
     }
 }

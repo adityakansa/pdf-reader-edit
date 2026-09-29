@@ -67,7 +67,8 @@ object DocxToHtml {
                     }
                 }
             }
-            flush(style, listItem, content.toString())
+            // Word's built-in "List Bullet"/"List Number" styles carry the bullet in the style, not in numPr.
+            flush(style, listItem || style?.startsWith("List") == true, content.toString())
         }
 
         private fun flush(style: String?, listItem: Boolean, content: String) {

@@ -74,6 +74,28 @@ was not downloaded, and no summary was generated. The JVM run of `SummaryParagra
 before it finished (Maven Central rate-limited it). Run `./gradlew :app:assembleDebug :app:testDebugUnitTest`
 locally after `git submodule update --init`.
 
+## Step 6 — sample files, Office viewer fixes (2026-09-29)
+
+FRs touched: FR-020, FR-033, FR-034.
+
+- `app/src/main/assets/samples/sample.{pdf,docx,xlsx,pptx}` added (9–40 KB each), so the existing
+  `SampleFiles` now has something to show. They are built by `scripts/make_samples.py` (reportlab,
+  python-docx, openpyxl, python-pptx, Pillow), so they can be rebuilt instead of edited by hand. Each one uses what
+  its viewer supports: the PDF has a real text layer on two pages (search, highlight, AI), the DOCX has
+  headings, bold/italic/underline, bullets, a table and a picture, the XLSX has two sheets with inline strings and
+  numbers, and the PPTX has four slides with text and a picture.
+- FR-034 bug fixed in `XlsxToHtml`: cells were placed in the order they appear in the XML. Spreadsheet
+  files leave blank cells out, so every value after a gap shifted left. An inline rich-text cell (one `<t>` per
+  run) also became several columns. Cells now go to the column in their `r` reference (padded with empty
+  `<td>`s) and their text is collected until `</c>`. `XlsxColumnTest` covers the reference parsing.
+- FR-033 bug fixed in `DocxToHtml`: paragraphs styled `List Bullet`/`List Number` (Word's built-in list
+  styles, which have no `numPr`) now render as list items.
+
+Verified: the four files open with the Python libraries that wrote them. Their zip parts match what the
+converters read (`word/media/*`, `xl/worksheets/sheet{1,2}.xml` with `t="inlineStr"`, `ppt/slides/slide1–4.xml`,
+`ppt/media/*`). Not verified: no Android build or device run (same network block as Step 5), so the
+viewers were not run on these files and `XlsxColumnTest` has not been run.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.
