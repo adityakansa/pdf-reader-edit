@@ -10,6 +10,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.Bookmarks
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ReadingPositions
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupKind
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfMarkup
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfMarkupWriter
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfPageDimensions
@@ -47,6 +48,9 @@ data class ReaderUiState(
     /** FR-032 */
     val highlightMode: Boolean = false,
     val pendingHighlights: List<PdfMarkup> = emptyList(),
+    /** The annotate tool in use while [highlightMode] is on. */
+    val markupTool: MarkupKind = MarkupKind.HIGHLIGHT,
+    val penColor: Int = ReaderViewModel.PEN_COLORS.first(),
     val jumpTo: Int? = null,
     /** Bookmarked pages of this PDF, zero-based. */
     val bookmarks: Set<Int> = emptySet(),
@@ -197,20 +201,55 @@ class ReaderViewModel @Inject constructor(
         _state.value = _state.value.copy(highlightMode = on)
     }
 
+    fun setMarkupTool(tool: MarkupKind) {
+        _state.value = _state.value.copy(markupTool = tool)
+    }
+
+    fun setPenColor(argb: Int) {
+        _state.value = _state.value.copy(penColor = argb, markupTool = MarkupKind.INK)
+    }
+
+    /** Removes the most recent unsaved mark. */
+    fun undoMarkup() {
+        _state.value = _state.value.copy(pendingHighlights = _state.value.pendingHighlights.dropLast(1))
+    }
+
+    /** A freehand stroke drawn with the pen; points are page fractions. */
+    fun addInk(pageIndex: Int, points: List<Pair<Float, Float>>) {
+        if (points.size < 2) return
+        val mark = PdfMarkup(
+            page = pageIndex,
+            left = points.minOf { it.first },
+            top = points.minOf { it.second },
+            right = points.maxOf { it.first },
+            bottom = points.maxOf { it.second },
+            colorArgb = _state.value.penColor,
+            kind = MarkupKind.INK,
+            strokes = listOf(points),
+        )
+        _state.value = _state.value.copy(pendingHighlights = _state.value.pendingHighlights + mark)
+    }
+
     /** The words under the box the finger dragged over, turned into a pending highlight. */
     fun highlight(pageIndex: Int, left: Float, top: Float, right: Float, bottom: Float) {
         viewModelScope.launch {
             val words = wordsOn(pageIndex)
             val hit = words.filter { it.intersects(left, top, right, bottom) }
             if (hit.isEmpty()) return@launch
+            val kind = _state.value.markupTool.takeIf { it != MarkupKind.INK } ?: return@launch
             val mark = PdfMarkup(
                 page = pageIndex,
                 left = hit.minOf { it.left },
                 top = hit.minOf { it.top },
                 right = hit.maxOf { it.right },
                 bottom = hit.maxOf { it.bottom },
-                colorArgb = HIGHLIGHT_ARGB,
+                colorArgb = when (kind) {
+                    MarkupKind.UNDERLINE -> UNDERLINE_ARGB
+                    MarkupKind.STRIKEOUT -> STRIKEOUT_ARGB
+                    else -> HIGHLIGHT_ARGB
+                },
                 text = hit.joinToString(" ") { it.text },
+                kind = kind,
             )
             _state.value = _state.value.copy(pendingHighlights = _state.value.pendingHighlights + mark)
         }
@@ -237,7 +276,7 @@ class ReaderViewModel @Inject constructor(
         if (marks.isEmpty()) return
         viewModelScope.launch {
             val output = runCatching {
-                outputFolder.write(OutputFolder.highlightedName(file.name)) { out ->
+                outputFolder.write(OutputFolder.derivedName(file.name, "annotated")) { out ->
                     val temp = File.createTempFile("highlight", ".pdf", access.scratchDir)
                     access.openStream(source?.uri ?: file.uri).use { input ->
                         PdfMarkupWriter.write(
@@ -280,7 +319,12 @@ class ReaderViewModel @Inject constructor(
         source?.decryptedCopy?.delete()
     }
 
-    private companion object {
-        const val HIGHLIGHT_ARGB = 0xFFFFEB3B.toInt()
+    companion object {
+        private const val HIGHLIGHT_ARGB = 0xFFFFEB3B.toInt()
+        private const val UNDERLINE_ARGB = 0xFF1E6FD9.toInt()
+        private const val STRIKEOUT_ARGB = 0xFFD32F2F.toInt()
+
+        /** Pen colours offered in annotate mode: red, blue, black. */
+        val PEN_COLORS = listOf(0xFFD32F2F.toInt(), 0xFF1E6FD9.toInt(), 0xFF000000.toInt())
     }
 }

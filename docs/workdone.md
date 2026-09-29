@@ -327,6 +327,24 @@ JavaScript off and compared by eye. Three defects were found and fixed that way:
 (style-level numbering), a blank line after page breaks, and slide titles not centred (layout inheritance). Not
 attempted: headers/footers, footnotes, text boxes in Word, charts/SmartArt/gradients/rotation in PowerPoint.
 
+## Step 11c — annotate: underline, strikethrough, freehand pen (2026-09-29)
+
+- `pdf/PdfMarkupWriter`: `PdfMarkup` has a `kind` (HIGHLIGHT, UNDERLINE, STRIKEOUT, INK) and `strokes`.
+  Underline and strikethrough become standard `/Underline` and `/StrikeOut` text-markup annotations with quad points.
+  The pen becomes a standard `/Ink` annotation (`InkList`, border width). Underline, strikethrough and ink carry their
+  own normal appearance stream, so viewers that do not generate appearances still draw them. The highlight is
+  unchanged. Output is `<name>_annotated.pdf`; the original is untouched.
+- Reader: "Highlight" is now **Annotate**. A bottom tool bar has Highlight / Underline / Strike / Pen (red, blue,
+  black) / Undo, with a hint that changes for the pen. The page chip hides while annotating. Pen strokes are captured
+  per page as fractions (`PdfPages` → `ReaderViewModel.addInk`) and previewed live; pending marks draw as they will
+  be saved.
+- Harness: `PdfMarkupWriter` is compiled against real PDFBox. `checks/MarkupCheck` writes one of each kind, reads
+  back the subtypes (Highlight, Underline, StrikeOut, Ink), the InkList and the appearance streams, and renders the
+  page to PNG. It was checked by eye: yellow highlight, blue underline, red strike, black zig-zag ink.
+
+Verified: `tools/jvm-check/run.sh` → **OK (40 tests)**. Not verified: the Compose side (annotate bar, pen capture),
+since there is no Android build here.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

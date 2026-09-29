@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.HorizontalDivider
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Printing
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupKind
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -267,7 +268,7 @@ fun PdfReaderScreen(
                             onClick = { menuOpen = false; onExtractText(key) },
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_highlight)) },
+                            text = { Text(stringResource(R.string.action_annotate)) },
                             leadingIcon = { Icon(Icons.Filled.BorderColor, contentDescription = null) },
                             onClick = { menuOpen = false; viewModel.setHighlightMode(true) },
                         )
@@ -337,6 +338,9 @@ fun PdfReaderScreen(
                         onPageShown = viewModel::onPageShown,
                         highlights = state.pendingHighlights,
                         highlightMode = state.highlightMode,
+                        tool = state.markupTool,
+                        penColor = state.penColor,
+                        onInk = viewModel::addInk,
                         onHighlight = viewModel::highlight,
                         jumpTo = state.jumpTo,
                         onJumped = viewModel::onJumped,
@@ -344,7 +348,7 @@ fun PdfReaderScreen(
                     )
                 }
             }
-            if (state.pages.isNotEmpty() && !state.loading) {
+            if (state.pages.isNotEmpty() && !state.loading && !state.highlightMode) {
                 Text(
                     text = stringResource(R.string.reader_page_of, state.currentPage + 1, state.pages.size),
                     style = MaterialTheme.typography.labelMedium,
@@ -359,9 +363,11 @@ fun PdfReaderScreen(
                 )
             }
             if (state.highlightMode) {
-                // Without this the mode looks like the normal reader and people do not know what to do.
+                // Without a hint and a tool bar the mode looks like the normal reader and people do not know what to do.
                 Text(
-                    stringResource(R.string.reader_highlight_hint),
+                    stringResource(
+                        if (state.markupTool == MarkupKind.INK) R.string.annotate_hint_pen else R.string.reader_highlight_hint,
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Black,
                     modifier = Modifier
@@ -369,6 +375,15 @@ fun PdfReaderScreen(
                         .padding(8.dp)
                         .background(HighlightYellow, RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+                AnnotateBar(
+                    tool = state.markupTool,
+                    penColor = state.penColor,
+                    canUndo = state.pendingHighlights.isNotEmpty(),
+                    onTool = viewModel::setMarkupTool,
+                    onPenColor = viewModel::setPenColor,
+                    onUndo = viewModel::undoMarkup,
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
             if (state.noTextFound) {

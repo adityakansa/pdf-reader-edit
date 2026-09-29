@@ -25,6 +25,11 @@
     <string name="chip_ppt">PPT</string>
     <string name="chip_txt">TXT</string>
     <string name="action_print">Print</string>
+    <string name="action_annotate">Annotate</string>
+    <string name="annotate_underline">Underline</string>
+    <string name="annotate_strike">Strike</string>
+    <string name="annotate_pen">Pen</string>
+    <string name="annotate_hint_pen">Draw on the page with your finger, then tap ✓ to save</string>
     <string name="print_unavailable">Printing is not available on this phone.</string>
     <string name="action_close">Close</string>
     <string name="reader_pages">Pages</string>
@@ -100,7 +105,7 @@
     <string name="reader_go_to_page">Go to page</string>
     <string name="reader_page_range">Page (1–%1$d)</string>
     <string name="action_go">Go</string>
-    <string name="reader_highlight_hint">Drag over the text you want to highlight, then tap ✓ to save</string>
+    <string name="reader_highlight_hint">Drag over the text you want to mark, then tap ✓ to save</string>
     <string name="cd_show_password">Show password</string>
     <string name="cd_hide_password">Hide password</string>
     <string name="action_open">Open</string>

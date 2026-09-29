@@ -32,6 +32,13 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupKind
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
@@ -61,6 +68,9 @@ fun PdfPages(
     highlightMode: Boolean,
     onHighlight: (page: Int, left: Float, top: Float, right: Float, bottom: Float) -> Unit,
     jumpTo: Int?,
+    tool: MarkupKind = MarkupKind.HIGHLIGHT,
+    penColor: Int = 0xFF000000.toInt(),
+    onInk: (page: Int, points: List<Pair<Float, Float>>) -> Unit = { _, _ -> },
     onJumped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -105,6 +115,9 @@ fun PdfPages(
                 highlights = highlights.filter { it.page == index },
                 highlightMode = highlightMode,
                 onHighlight = { l, t, r, b -> onHighlight(index, l, t, r, b) },
+                tool = tool,
+                penColor = penColor,
+                onInk = { points -> onInk(index, points) },
                 modifier = Modifier.width(pageWidth),
             )
         }
@@ -120,10 +133,15 @@ private fun Page(
     highlights: List<PdfMarkup>,
     highlightMode: Boolean,
     onHighlight: (Float, Float, Float, Float) -> Unit,
+    tool: MarkupKind,
+    penColor: Int,
+    onInk: (List<Pair<Float, Float>>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dragStart by remember { mutableStateOf<Offset?>(null) }
     var dragEnd by remember { mutableStateOf<Offset?>(null) }
+    // The stroke being drawn with the pen, in pixels of this page.
+    val stroke = remember { mutableStateListOf<Offset>() }
 
     Box(
         modifier = modifier
@@ -146,7 +164,25 @@ private fun Page(
             Modifier
                 .fillMaxSize()
                 .then(
-                    if (!highlightMode) Modifier else Modifier.pointerInput(index) {
+                    if (!highlightMode) {
+                        Modifier
+                    } else if (tool == MarkupKind.INK) {
+                        Modifier.pointerInput(index, tool) {
+                            detectDragGestures(
+                                onDragStart = { stroke.clear(); stroke.add(it) },
+                                onDragEnd = {
+                                    val w = size.width.toFloat()
+                                    val h = size.height.toFloat()
+                                    onInk(stroke.map { (it.x / w).coerceIn(0f, 1f) to (it.y / h).coerceIn(0f, 1f) })
+                                    stroke.clear()
+                                },
+                                onDragCancel = { stroke.clear() },
+                            ) { change, _ ->
+                                change.consume()
+                                stroke.add(change.position)
+                            }
+                        }
+                    } else Modifier.pointerInput(index, tool) {
                         detectDragGestures(
                             onDragStart = { dragStart = it; dragEnd = it },
                             onDragEnd = {
@@ -168,14 +204,15 @@ private fun Page(
                     },
                 )
                 .drawBehind {
-                    highlights.forEach { mark ->
-                        drawRect(
-                            color = HighlightYellow.copy(alpha = 0.4f),
-                            topLeft = Offset(mark.left * size.width, mark.top * size.height),
-                            size = Size(
-                                (mark.right - mark.left) * size.width,
-                                (mark.bottom - mark.top) * size.height,
-                            ),
+                    highlights.forEach { mark -> drawMark(mark) }
+                    if (stroke.size >= 2) {
+                        drawPath(
+                            Path().apply {
+                                moveTo(stroke.first().x, stroke.first().y)
+                                stroke.drop(1).forEach { lineTo(it.x, it.y) }
+                            },
+                            color = Color(penColor),
+                            style = Stroke(width = PEN_WIDTH.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                         )
                     }
                     val start = dragStart
@@ -194,6 +231,39 @@ private fun Page(
         )
     }
 }
+
+/** A pending mark as it will look once saved. */
+private fun DrawScope.drawMark(mark: PdfMarkup) {
+    val left = mark.left * size.width
+    val right = mark.right * size.width
+    val top = mark.top * size.height
+    val bottom = mark.bottom * size.height
+    val color = Color(mark.colorArgb)
+    when (mark.kind) {
+        MarkupKind.HIGHLIGHT -> drawRect(
+            color = HighlightYellow.copy(alpha = 0.4f),
+            topLeft = Offset(left, top),
+            size = Size(right - left, bottom - top),
+        )
+        MarkupKind.UNDERLINE -> drawLine(color, Offset(left, bottom), Offset(right, bottom), strokeWidth = 2.dp.toPx())
+        MarkupKind.STRIKEOUT -> {
+            val middle = (top + bottom) / 2f
+            drawLine(color, Offset(left, middle), Offset(right, middle), strokeWidth = 2.dp.toPx())
+        }
+        MarkupKind.INK -> mark.strokes.filter { it.size >= 2 }.forEach { points ->
+            drawPath(
+                Path().apply {
+                    moveTo(points.first().first * size.width, points.first().second * size.height)
+                    points.drop(1).forEach { (x, y) -> lineTo(x * size.width, y * size.height) }
+                },
+                color = color,
+                style = Stroke(width = PEN_WIDTH.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+}
+
+private val PEN_WIDTH = 2.5.dp
 
 /** Pinch to zoom between 1× and 5×. One-finger drags are left alone so the list still scrolls. */
 private fun Modifier.zoomable(zoom: Float, onZoom: (Float) -> Unit) = pointerInput(Unit) {

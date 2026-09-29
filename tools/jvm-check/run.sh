@@ -34,9 +34,11 @@ for p in org/jetbrains/kotlin/kotlin-compiler-embeddable/$K/kotlin-compiler-embe
 done
 CP=$(ls "$LIB"/*.jar | tr '\n' ':')
 rm -rf "$OUT" && mkdir -p "$GEN"
-sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/pdf/PdfTools.kt" > "$GEN/PdfTools.kt"
+for f in PdfTools PdfMarkupWriter; do
+  sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/pdf/$f.kt" > "$GEN/$f.kt"
+done
 SRC=("$P/ai/SummaryParagraphs.kt" "$P/data/files/FileNames.kt" "$P/office/OoxmlZip.kt" "$P/office/HtmlPage.kt"
-     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$GEN/PdfTools.kt" "$HERE"/stubs/*.kt)
+     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$GEN/PdfTools.kt" "$GEN/PdfMarkupWriter.kt" "$HERE"/stubs/*.kt)
 TESTS=("$T/ai/SummaryParagraphsTest.kt" "$T/data/files/FileNamesTest.kt" "$T/office/XlsxColumnTest.kt"
        "$T/office/OoxmlPathTest.kt" "$T/office/TextToHtmlTest.kt" "$T/office/DocxFormatTest.kt" "$HERE"/checks/*.kt)
 java -cp "$CP" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler "${SRC[@]}" "${TESTS[@]}" \
@@ -49,6 +51,6 @@ java -cp "$OUT/classes:$CP" org.junit.runner.JUnitCore \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OoxmlPathTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.TextToHtmlTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.DocxFormatTest \
-  check.PdfToolsCheck 2>&1 | grep -v "JAVA_TOOL\|WARNING\|FileSystemFontProvider\|PDType1Font"
+  check.PdfToolsCheck check.MarkupCheck 2>&1 | grep -v "JAVA_TOOL\|WARNING\|FileSystemFontProvider\|PDType1Font"
 java -cp "$OUT/classes:$CP" check.OfficeRunKt "$ROOT/app/src/main/assets/samples" "$OUT/office" 2>&1 | grep -v JAVA_TOOL
 echo "Office HTML written to $OUT/office"
