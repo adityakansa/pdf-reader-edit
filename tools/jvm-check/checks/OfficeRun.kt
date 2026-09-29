@@ -14,6 +14,12 @@ fun main(args: Array<String>) {
         File(outDir, "$name.html").writeText(html)
         println("$name -> ${html.length} chars")
     }
+    File(args[0], "../../../../../tools/jvm-check/fixtures").canonicalFile.listFiles { f -> f.extension == "docx" }?.forEach { f ->
+        val parts = f.inputStream().use { OoxmlZip.read(it) }
+        val media = OoxmlZip.extractMedia(parts, File(outDir, "media-${f.name}").apply { mkdirs() })
+        File(outDir, "${f.name}.html").writeText(DocxToHtml.convert(parts, media))
+        println("${f.name} converted")
+    }
     val txt = TextToHtml.plain(TextToHtml.decode(File(samples, "sample.txt").readBytes()), "cut")
     File(outDir, "sample.txt.html").writeText(txt)
     val csv = TextToHtml.csv("Item;Price;Qty\nPen;1,50;3\n\"Note; with semicolon\";2;10\n", "cap")

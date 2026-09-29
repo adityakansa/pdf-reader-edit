@@ -298,6 +298,35 @@ error (`rows += emptyList()` resolving to reassignment). XLSX, CSV and TXT outpu
 JavaScript off and checked by eye. Not verified: the Compose/Android parts (print adapter, reader sheets) are
 uncompiled, since the Android SDK is blocked here.
 
+## Step 11b — Office documents that look like the real thing (2026-09-29)
+
+- **Word (`DocxToHtml` rewritten).** White page cards on a grey desk, like Word's print layout, split where Word
+  last broke pages (`w:lastRenderedPageBreak`), at page breaks and at `pageBreakBefore`.
+  - Formatting: styles from `styles.xml` (Heading 1–6 by name or id, the Title style, `basedOn` chains, style
+    colours/sizes on headings) and document defaults (`rPrDefault`).
+  - Runs keep bold / italic / underline / strike, colour, size, font family, highlight, super/subscript.
+  - Paragraphs keep alignment, left and first-line indents, and spacing before/after. Empty paragraphs are kept
+    (they are how Word users space documents).
+  - Lists come from `numbering.xml`: real markers (1. / a. / i. / •, multi-level templates like `%1.%2.`) with
+    counters that continue and restart per level. Style-based numbering ("List Number") works too.
+  - Tables keep formatted paragraphs in cells, cell shading and `gridSpan` column merges. Images keep their stored width.
+- **PowerPoint (`PptxToHtml` rewritten).** Each slide is a real slide at the presentation's aspect ratio
+  (`p:sldSz`). Shapes, text boxes and pictures are absolutely positioned at their `a:xfrm` box as percentages.
+  - Placeholders without a box inherit it, plus alignment, anchor and default size, from the slide layout,
+    then the master; master `p:txStyles` supply the title/body defaults.
+  - Text size scales with the slide through container units (`cqw`), and "shrink on overflow" (`normAutofit
+    fontScale`) is honoured.
+  - Theme colours (`a:schemeClr` via `theme1.xml`), solid fills, outlines, ellipses and solid slide backgrounds are kept.
+  - Slide counter "n / N" above each slide.
+- **Harness**: `tools/jvm-check/fixtures/rich.docx` (title, coloured headings, strike/superscript/highlight,
+  alignment, numbered + bulleted lists, a shaded table with a merged row, a page break) is converted on every run.
+  `DocxFormatTest` covers list number formats, roman numerals, colours, alignment, units and run-format overlay.
+
+Verified: `tools/jvm-check/run.sh` → **OK (39 tests)**. `rich.docx` and `sample.pptx` were rendered in Chromium with
+JavaScript off and compared by eye. Three defects were found and fixed that way: numbered lists showing bullets
+(style-level numbering), a blank line after page breaks, and slide titles not centred (layout inheritance). Not
+attempted: headers/footers, footnotes, text boxes in Word, charts/SmartArt/gradients/rotation in PowerPoint.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

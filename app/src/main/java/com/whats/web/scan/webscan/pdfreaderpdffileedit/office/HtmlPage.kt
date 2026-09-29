@@ -2,7 +2,7 @@ package com.whats.web.scan.webscan.pdfreaderpdffileedit.office
 
 /** The shared shell for every converted document: one stylesheet, no script, readable on a phone. */
 object HtmlPage {
-    fun wrap(body: String): String = """
+    fun wrap(body: String, bodyClass: String = ""): String = """
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
@@ -32,6 +32,29 @@ table.grid th.rownum, table.grid th.corner { position: sticky; left: 0; backgrou
   text-align: center; min-width: 32px; z-index: 2; }
 table.grid td.num { text-align: right; }
 .plain { white-space: pre-wrap; font-size: 15px; line-height: 1.6; }
+body.desk { background: #e9e9ec; padding: 12px 10px 24px; }
+body.deck { background: #e9e9ec; padding: 8px 10px 24px; }
+body.deck .slide-number { margin: 10px 2px 6px; }
+.deck-slide { position: relative; width: 100%; height: 0; container-type: inline-size; background: #ffffff; color: #000000;
+  border-radius: 4px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 4px 12px rgba(0,0,0,.06);
+  font-family: 'Calibri', 'Carlito', 'Roboto', sans-serif; }
+.deck-slide .shape { position: absolute; display: flex; flex-direction: column; overflow: visible; box-sizing: border-box;
+  padding: 0.7cqw 1.2cqw; line-height: 1.15; overflow-wrap: anywhere; }
+.deck-slide .shape p { margin: 0 0 0.4em; }
+.deck-slide .shape .bullet { display: inline-block; width: 1.1em; }
+.deck-slide .shape-img { position: absolute; object-fit: fill; max-width: none; }
+.doc-page { background: #ffffff; color: #1a1a1a; border-radius: 2px; padding: 28px 22px 32px; margin: 0 auto 14px;
+  max-width: 820px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.06); font-size: 14.7px; line-height: 1.45;
+  font-family: 'Calibri', 'Carlito', 'Roboto', sans-serif; overflow-wrap: anywhere; }
+.doc-page p { margin: 0 0 8px; }
+.doc-page h1, .doc-page h2, .doc-page h3 { margin: 14px 0 8px; }
+.doc-page h1.title { font-size: 28px; font-weight: 400; margin-top: 0; }
+.doc-page p.li { margin: 0 0 4px; }
+.doc-page .marker { display: inline-block; text-align: left; }
+.doc-page img { max-width: 100%; height: auto; }
+table.doc-table { display: table; width: 100%; border-collapse: collapse; margin: 8px 0 12px; }
+table.doc-table td { border: 1px solid #bfbfbf; padding: 4px 6px; vertical-align: top; }
+table.doc-table td p { margin: 0 0 2px; }
 .notice { color: #9e9e9e; font-size: 13px; margin: 8px 0; }
 ul { margin: 4px 0 4px 20px; padding: 0; }
 @media (prefers-color-scheme: dark) {
@@ -40,11 +63,12 @@ ul { margin: 4px 0 4px 20px; padding: 0; }
   .slide { border-color: #2a2a2a; }
   .sheet-tabs { border-color: #333; background: #121212; }
   .sheet-tabs label { color: #aaa; }
+  body.desk, body.deck { background: #121212; }
   table.grid th, table.grid td { border-color: #333; }
   table.grid thead th, table.grid th.rownum, table.grid th.corner { background: #1e1e1e; color: #aaa; }
 }
 </style>
-</head><body>
+</head><body class="$bodyClass">
 $body
 </body></html>
 """
