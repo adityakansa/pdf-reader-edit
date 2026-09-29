@@ -12,6 +12,10 @@ plugins {
 // FR-101: All files access is a Play declaration risk. Flip to false to ship the SAF-only build.
 val allFilesAccess = (project.findProperty("ALL_FILES_ACCESS") as String?)?.toBoolean() ?: true
 
+// FR-069: llama.cpp is a git submodule (`git submodule update --init`). Without it the app still builds;
+// LlamaBridge then reports the summary as unsupported instead of crashing.
+val llamaSources = file("src/main/cpp/llama.cpp/CMakeLists.txt").exists()
+
 android {
     namespace = "com.whats.web.scan.webscan.pdfreaderpdffileedit"
     compileSdk {
@@ -68,6 +72,30 @@ android {
 
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+        // OpenCV and llama.cpp both ship the NDK's shared C++ runtime.
+        jniLibs { pickFirsts += "**/libc++_shared.so" }
+    }
+
+    // FR-068: the summary model ships in an install-time asset pack (App Bundle only).
+    assetPacks += listOf(":ai_summary_model")
+    androidResources { noCompress += "gguf" }
+
+    if (llamaSources) {
+        defaultConfig {
+            externalNativeBuild {
+                cmake {
+                    // The summary model needs 64-bit ARM (FR-071); 32-bit phones get no llama build.
+                    abiFilters += "arm64-v8a"
+                    arguments += listOf("-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared")
+                }
+            }
+        }
+        externalNativeBuild {
+            cmake {
+                path = file("src/main/cpp/CMakeLists.txt")
+                version = "3.22.1"
+            }
+        }
     }
 }
 

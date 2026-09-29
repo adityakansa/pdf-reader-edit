@@ -26,4 +26,5 @@ rootProject.name = "PDF reader & PDF File edit"
 include(":app")
 // Vendored slim OpenCV 4.14.0 (generated — see third-party/opencv/README.md).
 include(":third-party:opencv")
- 
+ // FR-068: install-time Play asset pack carrying the summary model.
+include(":ai_summary_model")

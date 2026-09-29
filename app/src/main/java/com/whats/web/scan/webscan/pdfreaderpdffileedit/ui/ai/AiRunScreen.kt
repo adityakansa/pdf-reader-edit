@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -55,6 +59,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ai.AiJob
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ai.TargetLanguage
+import com.google.mlkit.nl.translate.TranslateLanguage
+import java.util.Locale
 
 /**
  * FR-064 / FR-069 (S04). The file card, the target language for a translation, and the run itself.
@@ -192,6 +198,23 @@ fun AiRunScreen(
                 }
             }
 
+            if (job == AiJob.SUMMARY && state.running) {
+                Text(
+                    stringResource(R.string.summary_writing),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
+                )
+                Text(
+                    state.streamingText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                )
+            }
+
             if (state.summaryUnsupported) {
                 Text(
                     stringResource(R.string.ai_summary_unsupported),
@@ -246,6 +269,12 @@ fun AiRunScreen(
                 viewModel.downloadLanguage(language, wifiOnly)
             },
             onDismiss = { pendingDownload = null },
+        )
+    }
+    if (state.askSource) {
+        SourceLanguageDialog(
+            onPick = { code -> viewModel.run(onResult, code) },
+            onDismiss = viewModel::sourceQuestionDismissed,
         )
     }
     if (helpOpen) {
@@ -335,6 +364,38 @@ private fun DownloadLanguageDialog(
         confirmButton = {
             TextButton(onClick = { onConfirm(wifiOnly) }) { Text(stringResource(R.string.action_download)) }
         },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+/** FR-065: ML Kit said "und" for the page, so the user names its language. */
+@Composable
+private fun SourceLanguageDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    val languages = remember {
+        TranslateLanguage.getAllLanguages()
+            .map { code -> code to Locale(code).displayLanguage.replaceFirstChar { it.uppercase() } }
+            .sortedBy { it.second }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.source_language_title)) },
+        text = {
+            LazyColumn(Modifier.height(360.dp)) {
+                items(languages, key = { it.first }) { (code, name) ->
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPick(code) }
+                            .padding(vertical = 12.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
