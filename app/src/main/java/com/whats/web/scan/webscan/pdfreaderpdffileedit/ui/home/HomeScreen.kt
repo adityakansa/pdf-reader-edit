@@ -96,6 +96,7 @@ fun HomeScreen(
     onStorageAccess: () -> Unit,
     onNotices: () -> Unit,
     onOrganizePages: (DocFile) -> Unit,
+    onNewDocument: () -> Unit,
     canShowAds: Boolean,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -260,6 +261,7 @@ fun HomeScreen(
         CreatePdfSheet(
             onImageToPdf = { showCreate = false; onImageToPdf() },
             onScan = { showCreate = false; onScan() },
+            onNewDocument = { showCreate = false; onNewDocument() },
             onMerge = {
                 showCreate = false
                 viewModel.startMergePicking()

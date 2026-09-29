@@ -57,3 +57,32 @@ Sources: [GitHub topic: document-scanner](https://github.com/topics/document-sca
 | 7 | QR / barcode detection in scans | OSS-DocumentScanner | ML Kit barcode (new dependency) | later |
 | 8 | Compress PDF | CamScanner, Stirling | PdfBox image re-encode | later |
 | 9 | Lottie empty states / onboarding | — | new dependency | after a device build |
+
+## 5. Parity with "Document Reader - PDF Editor" (Simple Design)
+
+Checked against the features in its published description (`alldocumentreader.office.viewer.filereader`). Its
+Play page and screenshots cannot be reached from this environment, so its exact screens have not been compared.
+
+| Their feature | This app | Step |
+|---|---|---|
+| Open PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT | ✅ all of them in-app, including Office 97–2003 and CSV | 11a, 11e |
+| Word shown with formatting and layout | ✅ page cards, styles, fonts, colours, lists, tables, images | 11b |
+| Excel in an easy grid | ✅ spreadsheet grid with column letters, row numbers, sheet tabs | 11a |
+| PowerPoint slides "with high clarity" | ✅ real slides with positioned text, shapes and pictures | 11b |
+| Auto-scan the phone and organise by type | ✅ type chips + page-preview list/grid | 10a |
+| Folder structure view | ✅ Folders view | 11d |
+| Search by name | ✅ | — |
+| Search text in all documents | ✅ "Inside files" with snippets, PDFs open at the page | 11d |
+| Bookmark pages | ✅ bookmarks + page thumbnail navigator + go to page | 11a |
+| Highlight, underline, strikethrough, doodle | ✅ Annotate: highlight, underline, strike, pen (3 colours), undo | 11c |
+| Signature | ✅ (Pro) | 4 |
+| Merge / split PDF | ✅ merge; extract, rotate, delete pages | 10b |
+| Print | ✅ PDFs and every viewer page | 11a |
+| Share | ✅ | — |
+| Scan to PDF, images to PDF | ✅ with edge detection, filters, reorder | 3 |
+| Create new documents / edit | ✅ new document (Word, PDF or text) with headings, bold, italic, lists; edit .txt files | 11e |
+| Full-screen ads (a common review complaint) | ✅ none: banner + one native ad only | — |
+| **Extra here:** on-device translate, summary, OCR text extraction, PDF passwords, resume last page | — | 5, 9c, 10a, 10b |
+
+Not matched: editing existing Word/Excel/PowerPoint content in place (would need a full office editor), and
+exact visual fidelity for complex Office layouts (charts, SmartArt, text boxes, headers/footers).

@@ -47,6 +47,10 @@ object Routes {
     @Serializable
     data class OrganizePages(val key: String)
 
+    /** New document when [key] is null; otherwise the text file to edit. */
+    @Serializable
+    data class Editor(val key: String? = null)
+
     @Serializable
     data object Paywall
 

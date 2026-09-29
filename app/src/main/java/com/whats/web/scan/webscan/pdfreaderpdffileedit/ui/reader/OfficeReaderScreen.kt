@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -55,6 +56,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 fun OfficeReaderScreen(
     key: String,
     onBack: () -> Unit,
+    onEdit: (String) -> Unit = {},
     viewModel: OfficeReaderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -160,6 +162,11 @@ fun OfficeReaderScreen(
                     },
                 ) {
                     Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
+                }
+                if (state.html != null && state.file?.ext.equals("txt", ignoreCase = true) && state.file?.isSample != true) {
+                    IconButton(onClick = { onEdit(key) }) {
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.action_edit))
+                    }
                 }
                 if (state.html != null) {
                     IconButton(

@@ -28,19 +28,25 @@ class OutputFolder @Inject constructor(
 ) {
     data class Output(val uri: Uri, val name: String)
 
-    suspend fun write(baseName: String, write: (OutputStream) -> Unit): Output = withContext(Dispatchers.IO) {
-        val name = "$baseName.pdf"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) writeViaMediaStore(name, write)
+    /** Writes `<baseName>.<extension>`; PDFs by default, Word and text for the document editor. */
+    suspend fun write(
+        baseName: String,
+        extension: String = "pdf",
+        mimeType: String = "application/pdf",
+        write: (OutputStream) -> Unit,
+    ): Output = withContext(Dispatchers.IO) {
+        val name = "$baseName.$extension"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) writeViaMediaStore(name, mimeType, write)
         else writeViaFile(name, write)
     }
 
-    private fun writeViaMediaStore(name: String, write: (OutputStream) -> Unit): Output {
+    private fun writeViaMediaStore(name: String, mimeType: String, write: (OutputStream) -> Unit): Output {
         val resolver = context.contentResolver
         val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val unique = uniqueName(name) { candidate -> mediaStoreHas(candidate) }
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, unique)
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, "$RELATIVE_PATH/")
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
@@ -107,6 +113,8 @@ class OutputFolder @Inject constructor(
         fun highlightedName(original: String): String = "${original.substringBeforeLast('.')}_highlighted"
 
         fun mergedName(): String = "Merged $stamp"
+
+        fun documentName(): String = "Document $stamp"
 
         /** `<name>_<suffix>` for a tool's output, e.g. `Lease_pages`, `Lease_protected`. */
         fun derivedName(original: String, suffix: String): String = "${original.substringBeforeLast('.')}_$suffix"

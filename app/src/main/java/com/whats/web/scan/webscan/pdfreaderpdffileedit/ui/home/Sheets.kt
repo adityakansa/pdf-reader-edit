@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.MergeType
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
@@ -132,7 +133,13 @@ private fun SheetRadio(label: String, selected: Boolean, onClick: () -> Unit) {
 /** FR-040 (S11) */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePdfSheet(onImageToPdf: () -> Unit, onScan: () -> Unit, onMerge: () -> Unit, onDismiss: () -> Unit) {
+fun CreatePdfSheet(
+    onImageToPdf: () -> Unit,
+    onScan: () -> Unit,
+    onNewDocument: () -> Unit,
+    onMerge: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 40.dp)) {
             Text(
@@ -156,6 +163,15 @@ fun CreatePdfSheet(onImageToPdf: () -> Unit, onScan: () -> Unit, onMerge: () -> 
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
+            }
+            OutlinedButton(
+                onClick = onNewDocument,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Icon(Icons.Filled.NoteAdd, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.new_document), modifier = Modifier.padding(start = 8.dp))
             }
             OutlinedButton(
                 onClick = onMerge,

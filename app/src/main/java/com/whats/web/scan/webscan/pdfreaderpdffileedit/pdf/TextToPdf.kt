@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class TextToPdf @Inject constructor(private val outputFolder: OutputFolder) {
 
-    suspend fun save(title: String, text: String): OutputFolder.Output = withContext(Dispatchers.IO) {
+    suspend fun save(title: String, text: CharSequence): OutputFolder.Output = withContext(Dispatchers.IO) {
         val document = PdfDocument()
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = BODY_TEXT_SIZE

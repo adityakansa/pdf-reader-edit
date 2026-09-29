@@ -26,6 +26,27 @@
     <string name="chip_txt">TXT</string>
     <string name="action_print">Print</string>
     <string name="action_annotate">Annotate</string>
+    <string name="action_edit">Edit</string>
+    <string name="new_document">New document</string>
+    <string name="editor_new_title">New document</string>
+    <string name="editor_placeholder">Start typing. Use the bar below for headings, bold, italic and lists.</string>
+    <string name="editor_placeholder_text">This file is empty. Start typing.</string>
+    <string name="editor_save_title">Save document</string>
+    <string name="editor_save_failed">Could not save. Please try again.</string>
+    <string name="editor_leave_body">Your text has not been saved.</string>
+    <string name="format_heading">Heading</string>
+    <string name="format_subheading">Subheading</string>
+    <string name="format_bold">Bold</string>
+    <string name="format_italic">Italic</string>
+    <string name="format_bullets">Bulleted list</string>
+    <string name="format_numbers">Numbered list</string>
+    <string name="format_word">Word document (.docx)</string>
+    <string name="format_pdf">PDF</string>
+    <string name="format_text">Plain text (.txt)</string>
+    <plurals name="word_count">
+        <item quantity="one">%1$d word</item>
+        <item quantity="other">%1$d words</item>
+    </plurals>
     <string name="annotate_underline">Underline</string>
     <string name="annotate_strike">Strike</string>
     <string name="annotate_pen">Pen</string>

@@ -396,6 +396,37 @@ Verified: `tools/jvm-check/run.sh` → **OK (53 tests)**. The output was read (e
 3 paragraphs; simple-table.doc: a 2×3 table; SampleSS.xls: 3 sheets; SampleShow.ppt: 2 slides with titles and
 bullets, curly quotes intact) and rendered in Chromium. Not verified: Compose wiring on a device.
 
+## Step 11e (part 2) — create and edit documents (2026-09-29)
+
+- **New document** (Create sheet → "New document") opens `ui/editor/DocumentEditorScreen`: a full-screen editor with
+  a formatting bar (H1, H2, Bold, Italic, bulleted list, numbered list), a live word count, and a "Discard your
+  changes?" guard.
+  - Formatting is stored as light marks in the text (`# `, `## `, `- `, `1. `, `**bold**`, `_italic_`, see
+    `office/SimpleMarkup`), so the field stays a plain `BasicTextField` that works with every keyboard.
+  - The bar's actions are pure (`office/EditorActions`): line styles toggle across all selected lines and replace
+    other list/heading marks; bold/italic wrap or unwrap the selection, or insert a pair with the caret inside.
+  - **Save** asks for a name and format. **Word (.docx)** via `office/DocxWriter`: a valid package with styles.xml
+    (Heading 1/2, List Paragraph), numbering.xml (a bullet list, plus a fresh numbered instance per list so each
+    restarts at 1) and core properties. **PDF** via `TextToPdf`, which now takes styled text: headings larger and
+    bold, bold/italic runs, bullets and numbers. **Plain text** writes the marks out as •/1. lists.
+  - The saved file then opens in the viewer.
+- **Edit .txt files**: an Edit button in the viewer for text files (not samples). Save writes back over the original
+  (`openOutputStream(uri, "wt")`); if the file cannot be written it is saved as `<name>_edited.txt` instead.
+  The viewer is reopened so it shows the new text.
+- `OutputFolder.write` takes an extension and MIME type (PDF by default), so Word and text files go to the same
+  `Documents/PDF Reader/` with IS_PENDING protection.
+- Navigation: the editor reports the saved file, and `AppNavHost` pops the editor (and a stale viewer) **before**
+  `ShellViewModel.open` opens the result. The first version raced: it closed and opened at the same time, which
+  could pop the new viewer instead of the editor.
+- Harness: `SimpleMarkupTest`, `EditorActionsTest`, and `checks/DocxWriterCheck` (writes a DOCX and reads it back
+  through `DocxToHtml`). The written file was also opened with **python-docx**, an independent reader: styles
+  Heading 1/Normal/List Paragraph/Heading 2, bold and italic runs, and the title all came back. A bug was fixed in
+  the first draft: numbering.xml was written before the document built it.
+- `docs/COMPETITIVE_ANALYSIS.md` §5: a feature-by-feature parity table against "Document Reader - PDF Editor".
+
+Verified: `tools/jvm-check/run.sh` → **OK (65 tests)**. Not verified: the Compose editor on a device (keyboard,
+selection handling), and overwriting a .txt owned by another app on Android 10+ (expected to fall back to a copy).
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

@@ -36,6 +36,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.search.SearchScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.sign.PlaceOnPdfScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.settings.NoticesScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.tools.OrganizePagesScreen
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.editor.DocumentEditorScreen
 
 @Composable
 fun AppNavHost(
@@ -81,6 +82,7 @@ fun AppNavHost(
                     onStorageAccess = { navController.navigate(Routes.StorageAccess) },
                     onNotices = { navController.navigate(Routes.Notices) },
                     onOrganizePages = { file -> navController.navigate(Routes.OrganizePages(file.key)) },
+                    onNewDocument = { navController.navigate(Routes.Editor()) },
                     canShowAds = canShowAds,
                 )
             }
@@ -96,6 +98,20 @@ fun AppNavHost(
             }
             composable<Routes.Paywall> {
                 PaywallScreen(onClose = { navController.popBackStack() })
+            }
+            composable<Routes.Editor> { entry ->
+                DocumentEditorScreen(
+                    key = entry.toRoute<Routes.Editor>().key,
+                    onBack = navController::popBackStack,
+                    onSaved = { uri, mime ->
+                        // Close the editor, and the now-stale viewer when a text file was edited, then open the result.
+                        navController.popBackStack()
+                        if (navController.currentBackStackEntry?.destination?.hasRoute(Routes.OfficeReader::class) == true) {
+                            navController.popBackStack()
+                        }
+                        viewModel.open(uri, mime)
+                    },
+                )
             }
             composable<Routes.OrganizePages> { entry ->
                 OrganizePagesScreen(
@@ -183,6 +199,7 @@ fun AppNavHost(
                 OfficeReaderScreen(
                     key = entry.toRoute<Routes.OfficeReader>().key,
                     onBack = navController::popBackStack,
+                    onEdit = { key -> navController.navigate(Routes.Editor(key)) },
                 )
             }
         }
