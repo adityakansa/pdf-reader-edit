@@ -27,7 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -151,7 +153,46 @@ fun HomeScreen(
         }
     }
     FileActionsHost(actions, viewModel, snackbar, onTool = onFileTool)
+
+    val ratingDue by viewModel.ratingDue.collectAsStateWithLifecycle()
+    var showRating by remember { mutableStateOf(false) }
+    LaunchedEffect(ratingDue, state.tab) {
+        // Never over a fresh start: only after the user has come back to Home for a moment.
+        if (ratingDue && state.tab == HomeTab.HOME) {
+            kotlinx.coroutines.delay(RATING_DELAY_MS)
+            showRating = true
+        }
+    }
+    if (showRating) {
+        RatingSheet(
+            onGood = {
+                showRating = false
+                viewModel.ratingAnswered()
+                (context as? android.app.Activity)?.let { activity ->
+                    val manager = com.google.android.play.core.review.ReviewManagerFactory.create(activity)
+                    manager.requestReviewFlow().addOnCompleteListener { task ->
+                        if (task.isSuccessful) manager.launchReviewFlow(activity, task.result)
+                    }
+                }
+            },
+            onNotReally = {
+                showRating = false
+                viewModel.ratingAnswered()
+                com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Intents.email(
+                    context,
+                    com.whats.web.scan.webscan.pdfreaderpdffileedit.BuildConfig.SUPPORT_EMAIL,
+                    context.getString(R.string.mail_feedback_subject),
+                )
+            },
+            onDismiss = {
+                showRating = false
+                viewModel.ratingAnswered()
+            },
+        )
+    }
 }
+
+private const val RATING_DELAY_MS = 1_500L
 
 /** "All  PDF  Word  Excel  PPT  TXT" with a red underline under the chosen one, as One Read's Recent tab. */
 @OptIn(ExperimentalMaterial3Api::class)

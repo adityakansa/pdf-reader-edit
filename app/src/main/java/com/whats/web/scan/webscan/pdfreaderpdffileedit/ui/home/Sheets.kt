@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
@@ -227,5 +228,41 @@ private fun InfoLine(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** Screen 58: "Are you satisfied with PDF Reader?" — Good opens Play's review, Not really opens feedback. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RatingSheet(onGood: () -> Unit, onNotReally: () -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+        ) {
+            SoftCircleIcon(androidx.compose.material.icons.Icons.Filled.ThumbUp, BrandRed)
+            Text(
+                stringResource(R.string.rating_app_question),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(top = 20.dp, bottom = 24.dp),
+            )
+            com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.GradientButton(
+                stringResource(R.string.rating_good),
+                onClick = onGood,
+            )
+            androidx.compose.material3.OutlinedButton(
+                onClick = onNotReally,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .height(52.dp),
+            ) { Text(stringResource(R.string.rating_not_really), style = MaterialTheme.typography.titleMedium) }
+        }
     }
 }

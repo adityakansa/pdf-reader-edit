@@ -492,4 +492,20 @@
         <item quantity="one">%d image saved</item>
         <item quantity="other">%d images saved</item>
     </plurals>
+
+    <!-- Step 12d: premium screen and rating -->
+    <string name="premium_title">Get Premium</string>
+    <string name="premium_benefit_ads">Enjoy an ad-free experience</string>
+    <string name="premium_benefit_ai">Unlimited on-device AI: summary, translate, text</string>
+    <string name="premium_benefit_sign">Sign and stamp any PDF</string>
+    <string name="premium_benefit_files">Handle every file type</string>
+    <string name="premium_save">Save %1$d%%</string>
+    <string name="premium_trial_title">%1$s Free Trial</string>
+    <string name="premium_then_per_day">Then only %1$s/day</string>
+    <string name="premium_per_day">%1$s/day</string>
+    <string name="premium_start_trial">Start Free Trial</string>
+    <string name="premium_cancel_anytime">Cancel anytime</string>
+    <string name="premium_private_title">Private by design</string>
+    <string name="premium_private_body">Your documents never leave your phone.</string>
+    <string name="rating_app_question">Are you satisfied with PDF Reader?</string>
 </resources>

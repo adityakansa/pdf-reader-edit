@@ -587,6 +587,22 @@ import checked against the icon jar.
 Not verified: the Android-only parts on a device — WebView printing through the bridge, ML Kit on scanned
 pages, and Bitmap re-encoding in Compress.
 
+## Step 12d — premium screen, rating, screen-by-screen table (2026-09-29)
+
+- **Get Premium** (screen 70), rebuilt dark:
+  - ✕ and Restore at the top, "Get Premium", four checked benefits.
+  - The plans: the trial first ("3-Day Free Trial / Then only ₹11.37/day"), with a gold "Save N%" tag worked
+    out from Play's prices (`ui/paywall/PlanMath`, unit-tested with the screenshot's prices: 74%).
+  - A pinned white "Start Free Trial" button, "Cancel anytime", and links to Terms, Privacy and Manage.
+  - The reference's user review and "Trusted by millions" badge are left out on purpose: here they would be
+    made up. A true "Private by design — your documents never leave your phone" is shown instead.
+- **"Are you satisfied with PDF Reader?"** sheet (screen 58), asked once after three documents were opened,
+  1.5 s after returning Home. It shares the "asked" flag with the conversion card, so a user is asked once in
+  all. Good opens Play's in-app review; Not really opens a feedback email.
+- `docs/SCREEN_MATCH.md`: all 22 new screenshots (51–72) with what this app shows for each and where. Two are
+  deliberately not copied: the notification prompt (the app sends none) and the scan-crop setting.
+- Harness: **OK (79 tests)** (new `PlanMathTest`).
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

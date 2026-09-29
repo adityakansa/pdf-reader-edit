@@ -176,6 +176,13 @@ class HomeViewModel @Inject constructor(
 
     fun dismissDefaultBanner() = viewModelScope.launch { prefs.dismissDefaultBanner() }
 
+    /** Screen 58's "Are you satisfied?" sheet: once, after the user has opened a few documents. */
+    val ratingDue: StateFlow<Boolean> = combine(prefs.ratingAsked, repository.recents) { asked, recents ->
+        !asked && recents.size >= RATING_AFTER_FILES
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun ratingAnswered() = viewModelScope.launch { prefs.setRatingAsked() }
+
     /** True when a PDF tapped anywhere already opens here, so the banner has nothing to offer. */
     private fun checkDefaultReader() {
         val probe = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse("content://probe/file.pdf"), "application/pdf")
@@ -308,4 +315,8 @@ class HomeViewModel @Inject constructor(
     /** FR-018: page count for the File info dialog; null for anything that is not a readable PDF. */
     suspend fun pageCount(file: DocFile): Int? =
         if (file.type == DocType.PDF) runCatching { pdfAccess.pageCount(file.uri) }.getOrNull() else null
+
+    private companion object {
+        const val RATING_AFTER_FILES = 3
+    }
 }

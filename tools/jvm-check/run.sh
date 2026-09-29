@@ -39,9 +39,9 @@ for f in PdfTools PdfMarkupWriter MarkupEraser text/WordLayout PdfPageEditor Pdf
 done
 sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/search/DocumentText.kt" > "$GEN/DocumentText.kt"
 SRC=("$P/ai/SummaryParagraphs.kt" "$P/data/files/FileNames.kt" "$P/data/files/FolderNames.kt" "$P/office/OoxmlZip.kt" "$P/office/HtmlPage.kt"
-     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$P/office/SimpleMarkup.kt" "$P/office/DocxWriter.kt" "$P/office/DocxBuilder.kt" "$P/office/PrintCss.kt" "$P/office/EditorActions.kt" "$GEN/PdfTools.kt" "$GEN/PdfMarkupWriter.kt" "$GEN/PdfPageEditor.kt" "$GEN/WordLayout.kt" "$GEN/MarkupEraser.kt" "$GEN/PdfSecurity.kt" "$GEN/PdfWords.kt" "$GEN/TextLines.kt" "$GEN/DocumentText.kt" "$P"/office/legacy/*.kt "$HERE"/stubs/*.kt)
+     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$P/office/SimpleMarkup.kt" "$P/office/DocxWriter.kt" "$P/office/DocxBuilder.kt" "$P/office/PrintCss.kt" "$P/ui/paywall/PlanMath.kt" "$P/office/EditorActions.kt" "$GEN/PdfTools.kt" "$GEN/PdfMarkupWriter.kt" "$GEN/PdfPageEditor.kt" "$GEN/WordLayout.kt" "$GEN/MarkupEraser.kt" "$GEN/PdfSecurity.kt" "$GEN/PdfWords.kt" "$GEN/TextLines.kt" "$GEN/DocumentText.kt" "$P"/office/legacy/*.kt "$HERE"/stubs/*.kt)
 TESTS=("$T/ai/SummaryParagraphsTest.kt" "$T/data/files/FileNamesTest.kt" "$T/data/files/FolderNamesTest.kt" "$T/office/XlsxColumnTest.kt"
-       "$T/office/OoxmlPathTest.kt" "$T/office/TextToHtmlTest.kt" "$T/office/DocxFormatTest.kt" "$T/office/SimpleMarkupTest.kt" "$T/office/EditorActionsTest.kt" "$HERE"/checks/*.kt)
+       "$T/office/OoxmlPathTest.kt" "$T/office/TextToHtmlTest.kt" "$T/office/DocxFormatTest.kt" "$T/office/SimpleMarkupTest.kt" "$T/office/EditorActionsTest.kt" "$T/ui/paywall/PlanMathTest.kt" "$HERE"/checks/*.kt)
 java -cp "$CP" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler "${SRC[@]}" "${TESTS[@]}" \
   -d "$OUT/classes" -classpath "$CP" -jvm-target 17 -nowarn 2>&1 | grep -v "JAVA_TOOL\|Kotlin home" || true
 cd "$OUT"
@@ -55,6 +55,7 @@ java -Dsamples="$ROOT/app/src/main/assets/samples" -Dfixtures="$HERE/fixtures" -
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.DocxFormatTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.SimpleMarkupTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.EditorActionsTest \
+  com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.paywall.PlanMathTest \
   check.PdfToolsCheck check.PdfEditorCheck check.RestrictedPdfCheck check.MarkupEraserCheck check.PdfToWordCheck check.MarkupCheck check.DocumentTextCheck check.LegacyCheck check.DocxWriterCheck 2>&1 | grep -v "JAVA_TOOL\|WARNING\|FileSystemFontProvider\|PDType1Font"
 java -cp "$OUT/classes:$CP" check.OfficeRunKt "$ROOT/app/src/main/assets/samples" "$OUT/office" 2>&1 | grep -v JAVA_TOOL
 echo "Office HTML written to $OUT/office"

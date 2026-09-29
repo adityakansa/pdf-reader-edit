@@ -41,6 +41,9 @@ data class PlanOffer(
     val billingPeriod: String,
     /** ISO-8601 period of the free trial phase, or null when this user has no trial offer. */
     val trialPeriod: String?,
+    /** The paid price in millionths of the currency unit, for "per day" and "Save N%". */
+    val priceMicros: Long = 0L,
+    val currencyCode: String = "",
 )
 
 /**
@@ -119,6 +122,8 @@ class BillingManager @Inject constructor(
                 formattedPrice = paid?.formattedPrice.orEmpty(),
                 billingPeriod = paid?.billingPeriod.orEmpty(),
                 trialPeriod = trial?.billingPeriod,
+                priceMicros = paid?.priceAmountMicros ?: 0L,
+                currencyCode = paid?.priceCurrencyCode.orEmpty(),
             )
         }
     }
