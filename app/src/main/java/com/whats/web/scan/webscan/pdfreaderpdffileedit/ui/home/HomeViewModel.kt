@@ -9,7 +9,9 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileIndex
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileRepository
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.LibraryFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.StorageAccess
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FolderNames
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.AppPreferences
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.LibraryView
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortOrder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.IncomingFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
@@ -38,9 +40,15 @@ data class HomeUiState(
     val sort: SortOrder = SortOrder(),
     /** The phone is still being searched for documents. */
     val scanning: Boolean = false,
-    /** Page-preview grid instead of the list. */
-    val grid: Boolean = false,
-)
+    val view: LibraryView = LibraryView.LIST,
+    /** In the Folders view: the folders, or null while one is open (then [files] are its files). */
+    val folders: List<FolderItem>? = null,
+    val openFolder: String? = null,
+) {
+    val grid: Boolean get() = view == LibraryView.GRID
+}
+
+data class FolderItem(val id: String, val name: String, val path: String, val count: Int)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -57,19 +65,36 @@ class HomeViewModel @Inject constructor(
     private val filter = MutableStateFlow<DocType?>(null)
     private val selection = MutableStateFlow(emptySet<String>())
     private val selectionMode = MutableStateFlow(false)
+    private val openFolder = MutableStateFlow<String?>(null)
+
+    private data class ViewArgs(val tab: HomeTab, val filter: DocType?, val view: LibraryView, val folder: String?)
+
+    private fun folderItems(files: List<LibraryFile>): List<FolderItem> =
+        files.groupBy { FolderNames.parentOf(it.file.key) }
+            .filterKeys { it != null }
+            .map { (id, list) ->
+                val folder = id!!
+                FolderItem(folder, FolderNames.displayName(folder), FolderNames.displayPath(folder), list.size)
+            }
+            .sortedWith(compareByDescending<FolderItem> { it.count }.thenBy { it.name.lowercase() })
+
+    fun openFolder(id: String?) {
+        openFolder.value = id
+        clearSelection()
+    }
 
     val state: StateFlow<HomeUiState> = combine(
         combine(repository.all, repository.recents, repository.favourites) { all, recents, favourites ->
             Triple(all, recents, favourites)
         },
-        combine(tab, filter, prefs.libraryGrid) { t, f, g -> Triple(t, f, g) },
+        combine(tab, filter, prefs.libraryView, openFolder) { t, f, v, o -> ViewArgs(t, f, v, o) },
         combine(selection, selectionMode) { s, m -> s to m },
         entitlement.isPro,
         combine(storageAccess.state, index.scanning) { access, scanning -> access to scanning },
     ) { lists, tabFilter, sel, isPro, accessScanning ->
         val (access, scanning) = accessScanning
         val (all, recents, favourites) = lists
-        val (currentTab, currentFilter, grid) = tabFilter
+        val (currentTab, currentFilter, view, folder) = tabFilter
         val source = when (currentTab) {
             HomeTab.RECENT -> recents
             HomeTab.FAVOURITE -> favourites
@@ -78,19 +103,28 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             tab = currentTab,
             filter = currentFilter,
-            files = source.filter { currentFilter == null || it.file.type == currentFilter },
+            files = source
+                .filter { currentFilter == null || it.file.type == currentFilter }
+                .filter { folder == null || FolderNames.parentOf(it.file.key) == folder },
             selected = sel.first,
             selectionMode = sel.second,
             isPro = isPro,
             hasStorageAccess = access.hasFullAccess || access.grantedTrees.isNotEmpty() ||
                 access.grantedFiles.isNotEmpty(),
             scanning = scanning,
-            grid = grid,
+            view = view,
+            openFolder = folder,
+            folders = if (view == LibraryView.FOLDERS && folder == null) {
+                folderItems(source.filter { currentFilter == null || it.file.type == currentFilter })
+            } else {
+                null
+            },
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun selectTab(value: HomeTab) {
         tab.value = value
+        openFolder.value = null
         clearSelection()
     }
 
@@ -102,7 +136,10 @@ class HomeViewModel @Inject constructor(
 
     fun markOpened(key: String) = viewModelScope.launch { repository.markOpened(key) }
 
-    fun setGrid(grid: Boolean) = viewModelScope.launch { prefs.setLibraryGrid(grid) }
+    fun setView(view: LibraryView) = viewModelScope.launch {
+        openFolder.value = null
+        prefs.setLibraryView(view)
+    }
 
     fun setSort(order: SortOrder) = viewModelScope.launch { repository.setSortOrder(order) }
 

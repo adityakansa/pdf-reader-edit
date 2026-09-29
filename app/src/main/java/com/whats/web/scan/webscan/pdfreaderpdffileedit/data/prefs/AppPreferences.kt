@@ -13,6 +13,9 @@ import javax.inject.Singleton
 
 enum class SortField { NAME, DATE, SIZE }
 
+/** How the library shows files: rows, page-preview cards, or grouped by folder. */
+enum class LibraryView { LIST, GRID, FOLDERS }
+
 data class SortOrder(val field: SortField = SortField.DATE, val ascending: Boolean = false)
 
 private val Context.dataStore by preferencesDataStore("app_prefs")
@@ -25,7 +28,7 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     private val explainerKey = booleanPreferencesKey("storage_explainer_shown")
     private val proKey = booleanPreferencesKey("is_pro")
     private val samplesKey = booleanPreferencesKey("samples_installed")
-    private val gridKey = booleanPreferencesKey("library_grid")
+    private val viewKey = stringPreferencesKey("library_view")
 
     val sortOrder: Flow<SortOrder> = context.dataStore.data.map { p ->
         SortOrder(
@@ -39,10 +42,12 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     /** Cached entitlement so Pro survives an offline start (FR-084). */
     val isProCached: Flow<Boolean> = context.dataStore.data.map { it[proKey] ?: false }
 
-    /** List (default) or grid of page previews in the library. */
-    val libraryGrid: Flow<Boolean> = context.dataStore.data.map { it[gridKey] ?: false }
+    /** List (default), grid of page previews, or folders. */
+    val libraryView: Flow<LibraryView> = context.dataStore.data.map { p ->
+        p[viewKey]?.let { runCatching { LibraryView.valueOf(it) }.getOrNull() } ?: LibraryView.LIST
+    }
 
-    suspend fun setLibraryGrid(grid: Boolean) = context.dataStore.edit { it[gridKey] = grid }
+    suspend fun setLibraryView(view: LibraryView) = context.dataStore.edit { it[viewKey] = view.name }
 
     val samplesInstalled: Flow<Boolean> = context.dataStore.data.map { it[samplesKey] ?: false }
 

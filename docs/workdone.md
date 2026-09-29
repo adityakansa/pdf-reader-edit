@@ -345,6 +345,29 @@ attempted: headers/footers, footnotes, text boxes in Word, charts/SmartArt/gradi
 Verified: `tools/jvm-check/run.sh` → **OK (40 tests)**. Not verified: the Compose side (annotate bar, pen capture),
 since there is no Android build here.
 
+## Step 11d — Folders view and search inside documents (2026-09-29)
+
+- **Folders view.** The sort sheet's View row is now List / Grid / **Folders**, saved as `library_view`
+  (`LibraryView`). In Folders the current tab and chip are grouped by containing folder (folder icon, name,
+  "Internal storage › Download" path, file count, biggest first). A tap opens the folder (header with back
+  arrow, name and count), and system Back returns to the folder list. `data/files/FolderNames` works folders
+  out of path keys and SAF document ids (`primary:Download/x.pdf` → the same folder). `FolderNamesTest` covers it.
+- **Search inside files** ("search text in all documents" in the competitor's listing). The Search screen has
+  File names / Inside files chips.
+  - `search/DocumentText` extracts text per page: PDF via PdfBox `PDFTextStripper`, DOCX paragraphs, XLSX shared
+    strings + cells, PPTX slide text, TXT/CSV. Capped at 1M characters per file.
+  - `search/ContentSearch` caches each file's text (memory LRU + `cacheDir/text`, keyed on key|size|modified),
+    searches smallest files first, and streams hits and progress. It is cancellable between files, and skips
+    files over 40 MB and legacy formats.
+  - Results show the preview thumbnail, name, "Page n • k matches" and up to two snippets with the match in bold.
+    A tap opens the document; a PDF opens **at the page of the first match** (via `ReadingPositions`).
+  - Hidden on the AI PDF picker, which reuses the Search screen.
+- Harness: `checks/DocumentTextCheck` extracts from the real sample PDF (2 pages), DOCX, XLSX, PPTX and TXT, and
+  checks snippet marking and counting.
+
+Verified: `tools/jvm-check/run.sh` → **OK (46 tests)**. Not verified: Compose UI (folder list, content results)
+and search speed on a phone with thousands of files.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

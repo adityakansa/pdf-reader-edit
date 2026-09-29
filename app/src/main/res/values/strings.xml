@@ -41,6 +41,19 @@
 
     <!-- Library -->
     <string name="search_hint">Search in file</string>
+    <string name="search_mode_names">File names</string>
+    <string name="search_mode_content">Inside files</string>
+    <string name="search_content_hint">Type at least 2 letters to search the text of your documents</string>
+    <string name="search_content_progress">Searching… %1$d of %2$d files</string>
+    <string name="search_content_none">No document contains “%1$s”</string>
+    <plurals name="search_content_found">
+        <item quantity="one">Found in %1$d document</item>
+        <item quantity="other">Found in %1$d documents</item>
+    </plurals>
+    <plurals name="match_count">
+        <item quantity="one">%1$d match</item>
+        <item quantity="other">%1$d matches</item>
+    </plurals>
     <string name="search_no_results">No files named “%1$s”</string>
     <string name="clear">Clear</string>
     <string name="empty_documents">No documents yet</string>
@@ -191,6 +204,12 @@
     <string name="tool_failed">That did not work. The file may be damaged or protected.</string>
     <string name="view_list">List</string>
     <string name="view_grid">Grid</string>
+    <string name="view_folders">Folders</string>
+    <string name="folders_empty">No folders with documents yet</string>
+    <plurals name="file_count">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
     <string name="cd_password_protected">Password protected</string>
     <string name="cd_unfavourite">Remove from favourites</string>
     <plurals name="page_count">

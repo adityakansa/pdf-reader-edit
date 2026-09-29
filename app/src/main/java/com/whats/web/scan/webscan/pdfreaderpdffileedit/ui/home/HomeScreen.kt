@@ -1,6 +1,14 @@
 package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.FolderYellow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -59,6 +67,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.mimeType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileCard
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FolderNames
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileRow
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Intents
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.LocalThumbnails
@@ -124,8 +133,12 @@ fun HomeScreen(
     }
 
     // FR-019: Back leaves selection first; from another tab it returns to Document before leaving the app.
-    BackHandler(enabled = state.selectionMode || state.tab != HomeTab.DOCUMENT) {
-        if (state.selectionMode) viewModel.clearSelection() else viewModel.selectTab(HomeTab.DOCUMENT)
+    BackHandler(enabled = state.selectionMode || state.openFolder != null || state.tab != HomeTab.DOCUMENT) {
+        when {
+            state.selectionMode -> viewModel.clearSelection()
+            state.openFolder != null -> viewModel.openFolder(null)
+            else -> viewModel.selectTab(HomeTab.DOCUMENT)
+        }
     }
 
     Scaffold(
@@ -225,6 +238,7 @@ fun HomeScreen(
                     onStorageAccess = onStorageAccess,
                     onScan = onScan,
                     onImageToPdf = onImageToPdf,
+                    onOpenFolder = viewModel::openFolder,
                 )
             }
         }
@@ -232,8 +246,8 @@ fun HomeScreen(
 
     if (showSort) {
         SortSheet(
-            grid = state.grid,
-            onGrid = viewModel::setGrid,
+            view = state.view,
+            onView = viewModel::setView,
             current = sortOrder,
             onPick = {
                 sortOrder = it
@@ -374,9 +388,17 @@ private fun LibraryList(
     onStorageAccess: () -> Unit,
     onScan: () -> Unit,
     onImageToPdf: () -> Unit,
+    onOpenFolder: (String?) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TypeChips(selected = state.filter, onSelect = onFilter)
+        state.folders?.let { folders ->
+            FolderList(folders, onOpen = onOpenFolder)
+            return@Column
+        }
+        state.openFolder?.let { folder ->
+            FolderHeader(folder, count = state.files.size, onBack = { onOpenFolder(null) })
+        }
         if (state.files.isEmpty()) {
             EmptyState(state, onStorageAccess, onScan, onImageToPdf)
             return@Column
@@ -506,6 +528,87 @@ private fun EmptyState(
                     }
                 }
             }
+        }
+    }
+}
+
+/** The Folders view: every folder that holds documents, biggest first, like a file manager's list. */
+@Composable
+private fun FolderList(folders: List<FolderItem>, onOpen: (String) -> Unit) {
+    if (folders.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                stringResource(R.string.folders_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        return
+    }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface),
+        contentPadding = PaddingValues(bottom = 96.dp),
+    ) {
+        items(folders, key = { it.id }) { folder ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateItem()
+                    .clickable(role = Role.Button) { onOpen(folder.id) }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Folder,
+                    contentDescription = null,
+                    tint = FolderYellow,
+                    modifier = Modifier.size(40.dp),
+                )
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .padding(horizontal = 14.dp),
+                ) {
+                    Text(folder.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(
+                        folder.path,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    pluralStringResource(R.plurals.file_count, folder.count, folder.count),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FolderHeader(folder: String, count: Int, onBack: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(role = Role.Button, onClick = onBack)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+    ) {
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+        Icon(Icons.Filled.Folder, contentDescription = null, tint = FolderYellow, modifier = Modifier.padding(start = 8.dp))
+        Column(Modifier.padding(start = 10.dp)) {
+            Text(FolderNames.displayName(folder), style = MaterialTheme.typography.titleSmall)
+            Text(
+                pluralStringResource(R.plurals.file_count, count, count),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

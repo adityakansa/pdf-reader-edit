@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.LibraryView
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortField
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortOrder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.formatModified
@@ -53,8 +55,8 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortSheet(
-    grid: Boolean,
-    onGrid: (Boolean) -> Unit,
+    view: LibraryView,
+    onView: (LibraryView) -> Unit,
     current: SortOrder,
     onPick: (SortOrder) -> Unit,
     onDismiss: () -> Unit,
@@ -70,16 +72,22 @@ fun SortSheet(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 FilterChip(
-                    selected = !grid,
-                    onClick = { onGrid(false) },
+                    selected = view == LibraryView.LIST,
+                    onClick = { onView(LibraryView.LIST) },
                     label = { Text(stringResource(R.string.view_list)) },
                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.ViewList, contentDescription = null) },
                 )
                 FilterChip(
-                    selected = grid,
-                    onClick = { onGrid(true) },
+                    selected = view == LibraryView.GRID,
+                    onClick = { onView(LibraryView.GRID) },
                     label = { Text(stringResource(R.string.view_grid)) },
                     leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null) },
+                )
+                FilterChip(
+                    selected = view == LibraryView.FOLDERS,
+                    onClick = { onView(LibraryView.FOLDERS) },
+                    label = { Text(stringResource(R.string.view_folders)) },
+                    leadingIcon = { Icon(Icons.Filled.Folder, contentDescription = null) },
                 )
             }
             Text(
