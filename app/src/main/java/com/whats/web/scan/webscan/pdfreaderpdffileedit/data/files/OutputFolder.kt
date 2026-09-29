@@ -105,5 +105,10 @@ class OutputFolder @Inject constructor(
         fun signedName(original: String): String = "${original.substringBeforeLast('.')}_signed"
 
         fun highlightedName(original: String): String = "${original.substringBeforeLast('.')}_highlighted"
+
+        fun mergedName(): String = "Merged $stamp"
+
+        /** `<name>_<suffix>` for a tool's output, e.g. `Lease_pages`, `Lease_protected`. */
+        fun derivedName(original: String, suffix: String): String = "${original.substringBeforeLast('.')}_$suffix"
     }
 }

@@ -61,6 +61,9 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.mimeType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileCard
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileRow
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Intents
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.LocalThumbnails
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.PasswordDialog
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.SaveAsDialog
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.TypeChips
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.settings.SettingsContent
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.AiMode
@@ -83,6 +86,7 @@ fun HomeScreen(
     onAi: (AiMode) -> Unit,
     onStorageAccess: () -> Unit,
     onNotices: () -> Unit,
+    onOrganizePages: (DocFile) -> Unit,
     canShowAds: Boolean,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -97,6 +101,21 @@ fun HomeScreen(
     var menuFile by remember { mutableStateOf<DocFile?>(null) }
     var infoFile by remember { mutableStateOf<DocFile?>(null) }
     var deleteTargets by remember { mutableStateOf<List<DocFile>>(emptyList()) }
+    var mergeName by remember { mutableStateOf<String?>(null) }
+    var protectFile by remember { mutableStateOf<DocFile?>(null) }
+    var unlockFile by remember { mutableStateOf<DocFile?>(null) }
+    var unlockWrong by remember { mutableStateOf(false) }
+    val toolBusy by viewModel.toolBusy.collectAsStateWithLifecycle()
+    val thumbnails = LocalThumbnails.current
+
+    fun announce(result: HomeViewModel.ToolResult) {
+        val message = when (result) {
+            is HomeViewModel.ToolResult.Saved -> context.getString(R.string.saved_to, result.name)
+            HomeViewModel.ToolResult.WrongPassword -> context.getString(R.string.reader_password_wrong)
+            HomeViewModel.ToolResult.Failed -> context.getString(R.string.tool_failed)
+        }
+        scope.launch { snackbar.showSnackbar(message) }
+    }
     var sortOrder by remember { mutableStateOf(state.sort) }
 
     LaunchedEffect(Unit) {
@@ -120,6 +139,8 @@ fun HomeScreen(
                     selectionCount = state.selected.size,
                     allSelected = state.files.isNotEmpty() && state.selected.size == state.files.size,
                     onSelectAll = viewModel::toggleSelectAll,
+                    canMerge = state.selected.size >= 2 && viewModel.canMergeSelection(),
+                    onMergeSelected = { mergeName = viewModel.suggestedMergeName() },
                     onSearch = onSearch,
                     onPro = onPaywall,
                     onSort = { showSort = true },
@@ -225,6 +246,11 @@ fun HomeScreen(
         CreatePdfSheet(
             onImageToPdf = { showCreate = false; onImageToPdf() },
             onScan = { showCreate = false; onScan() },
+            onMerge = {
+                showCreate = false
+                viewModel.startMergePicking()
+                scope.launch { snackbar.showSnackbar(context.getString(R.string.merge_hint)) }
+            },
             onDismiss = { showCreate = false },
         )
     }
@@ -246,6 +272,21 @@ fun HomeScreen(
             onDelete = { menuFile = null; deleteTargets = listOf(file) },
             onInfo = { menuFile = null; infoFile = file },
             onDismiss = { menuFile = null },
+            onOrganize = if (file.type == DocType.PDF) {
+                { menuFile = null; onOrganizePages(file) }
+            } else {
+                null
+            },
+            onProtect = if (file.type == DocType.PDF && thumbnails?.cached(file)?.locked != true) {
+                { menuFile = null; protectFile = file }
+            } else {
+                null
+            },
+            onUnlock = if (file.type == DocType.PDF && thumbnails?.cached(file)?.locked == true) {
+                { menuFile = null; unlockWrong = false; unlockFile = file }
+            } else {
+                null
+            },
         )
     }
     infoFile?.let { file ->
@@ -256,6 +297,54 @@ fun HomeScreen(
             pages = pages,
             onDismiss = { infoFile = null },
         )
+    }
+    mergeName?.let { suggested ->
+        SaveAsDialog(
+            suggested = suggested,
+            onSave = { name -> mergeName = null; viewModel.mergeSelected(name, ::announce) },
+            onDismiss = { mergeName = null },
+        )
+    }
+    protectFile?.let { file ->
+        PasswordDialog(
+            title = stringResource(R.string.protect_pdf),
+            message = stringResource(R.string.protect_body),
+            confirm = true,
+            confirmLabel = stringResource(R.string.action_protect),
+            onConfirm = { password -> protectFile = null; viewModel.protect(file, password, ::announce) },
+            onDismiss = { protectFile = null },
+        )
+    }
+    unlockFile?.let { file ->
+        PasswordDialog(
+            title = stringResource(R.string.unlock_pdf),
+            message = stringResource(R.string.unlock_body),
+            confirm = false,
+            confirmLabel = stringResource(R.string.action_unlock),
+            error = if (unlockWrong) stringResource(R.string.reader_password_wrong) else null,
+            onConfirm = { password ->
+                viewModel.unlock(file, password) { result ->
+                    if (result == HomeViewModel.ToolResult.WrongPassword) {
+                        unlockWrong = true
+                    } else {
+                        unlockFile = null
+                        announce(result)
+                    }
+                }
+            },
+            onDismiss = { unlockFile = null },
+        )
+    }
+    if (toolBusy) {
+        // Merging big files takes a few seconds; a blocking indicator says the tap was taken.
+        androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+            androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large) {
+                Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(color = BrandRed, modifier = Modifier.size(28.dp))
+                    Text(stringResource(R.string.tool_working), modifier = Modifier.padding(start = 16.dp))
+                }
+            }
+        }
     }
     if (deleteTargets.isNotEmpty()) {
         val targets = deleteTargets

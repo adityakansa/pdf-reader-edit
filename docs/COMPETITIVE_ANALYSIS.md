@@ -12,7 +12,7 @@ details come from search summaries of those pages and the Play listing. Star cou
 | AI | **AI Assistant**: ask questions by text or voice, answers with numbered **citations** that jump to the source; one-tap **generative summary**; premium with a free question quota | **"Chat with Docs"** (Mar 2026): questions, summaries, key insights | On-device **Translate** (7 languages, ML Kit) and **Summary** (96M-parameter LLM via llama.cpp). No document Q&A. Nothing leaves the phone. |
 | File list | Recent / All scans; **page thumbnails**; tap-to-select; sort by name or date; quick actions after a scan | Folder-based, thumbnails, tags | **First-page thumbnails, page count, list/grid switch** (Step 10a), type chips, sort, favourites, recents, multi-select |
 | Editing | Modify scan later (reorder, crop, enhance); Fill & Sign | Watermark, signature, annotate | Highlight, signature/text stamps (Pro) |
-| PDF tools | Merge, split, compress, protect (Acrobat, paid) | Merge, split, compress, password | Not yet — see §4 |
+| PDF tools | Merge, split, compress, protect (Acrobat, paid) | Merge, split, compress, password | **Merge, extract, rotate, delete pages, add/remove password** (Step 10b); compress not yet |
 | Privacy | Cloud (Adobe Document Cloud) | Cloud sync | **Fully on device** — our strongest differentiator |
 
 Sources: [Adobe Scan AI Assistant announcement](https://community.adobe.com/announcements-516/ask-your-scans-anything-meet-adobe-scan-ai-assistant-1561233),
@@ -50,7 +50,7 @@ Sources: [GitHub topic: document-scanner](https://github.com/topics/document-sca
 |---|---|---|---|---|
 | 1 | Page thumbnails + list/grid, Adobe-style rows | Adobe, CamScanner | PdfRenderer | ✅ Step 10a |
 | 2 | Extract text (OCR / text layer) → copy, share, save | Adobe, CamScanner | ML Kit OCR + PdfBox | ✅ Step 10a |
-| 3 | PDF tools: merge, split / extract pages, rotate pages, add or remove password | Acrobat, CamScanner, Stirling | PdfBox (merger, splitter, protection policy) | next |
+| 3 | PDF tools: merge, split / extract pages, rotate pages, delete pages, add or remove password | Acrobat, CamScanner, Stirling | PdfBox (merger, splitter, protection policy) | ✅ Step 10b |
 | 4 | Searchable scans (invisible OCR text layer on save) | Adobe, CamScanner, MakeACopy | ML Kit OCR + PdfBox | planned |
 | 5 | Ask-your-document (Q&A) | Adobe AI Assistant, CamScanner Chat | The 96M on-device model is too weak for reliable answers; a keyword finder with page citations over the text index is honest and feasible | to decide |
 | 6 | Shadow / uneven-light cleanup filter | CamScanner | OpenCV (already bundled) | planned |

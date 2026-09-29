@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
@@ -120,7 +124,7 @@ private fun SheetRadio(label: String, selected: Boolean, onClick: () -> Unit) {
 /** FR-040 (S11) */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePdfSheet(onImageToPdf: () -> Unit, onScan: () -> Unit, onDismiss: () -> Unit) {
+fun CreatePdfSheet(onImageToPdf: () -> Unit, onScan: () -> Unit, onMerge: () -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 40.dp)) {
             Text(
@@ -145,6 +149,15 @@ fun CreatePdfSheet(onImageToPdf: () -> Unit, onScan: () -> Unit, onDismiss: () -
                     )
                 }
             }
+            OutlinedButton(
+                onClick = onMerge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Icon(Icons.Filled.MergeType, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.merge_pdfs), modifier = Modifier.padding(start = 8.dp))
+            }
         }
     }
 }
@@ -158,6 +171,9 @@ fun FileMenuSheet(
     onDelete: () -> Unit,
     onInfo: () -> Unit,
     onDismiss: () -> Unit,
+    onOrganize: (() -> Unit)? = null,
+    onProtect: (() -> Unit)? = null,
+    onUnlock: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(bottom = 32.dp)) {
@@ -167,6 +183,9 @@ fun FileMenuSheet(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             MenuRow(Icons.Filled.Share, stringResource(R.string.action_share), onShare)
+            onOrganize?.let { MenuRow(Icons.Filled.Dashboard, stringResource(R.string.organize_pages), it) }
+            onProtect?.let { MenuRow(Icons.Filled.Lock, stringResource(R.string.protect_pdf), it) }
+            onUnlock?.let { MenuRow(Icons.Filled.LockOpen, stringResource(R.string.unlock_pdf), it) }
             if (!file.isSample) {
                 MenuRow(Icons.Filled.Delete, stringResource(R.string.action_delete), onDelete)
             }

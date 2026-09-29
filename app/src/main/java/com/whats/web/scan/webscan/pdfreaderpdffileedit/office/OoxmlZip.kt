@@ -58,10 +58,22 @@ object OoxmlZip {
         return map
     }
 
-    private fun normalise(target: String, base: String): String = when {
-        target.startsWith("/") -> target.removePrefix("/")
-        target.startsWith("../") -> target.removePrefix("../")
-        else -> base + target
+    /**
+     * Resolves a relationship target against the folder of the part that owns it: `../media/image1.png`
+     * from `ppt/slides/` is `ppt/media/image1.png`. (Stripping the `../` instead lost the `ppt/` and every
+     * PowerPoint picture with it.) A leading `/` means "from the package root".
+     */
+    internal fun normalise(target: String, base: String): String {
+        if (target.startsWith("/")) return target.removePrefix("/")
+        val segments = base.split('/').filter { it.isNotEmpty() }.toMutableList()
+        target.split('/').forEach { segment ->
+            when (segment) {
+                "", "." -> Unit
+                ".." -> if (segments.isNotEmpty()) segments.removeAt(segments.lastIndex)
+                else -> segments += segment
+            }
+        }
+        return segments.joinToString("/")
     }
 
     /**

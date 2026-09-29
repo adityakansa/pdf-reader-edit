@@ -235,6 +235,40 @@ Checks run (no compiler available): all `R.string`/`R.plurals` referenced exist,
 balance, and every `Icons.*` used has its import. Not verified: no Android build or device run. Thumbnail
 speed on a phone with thousands of PDFs is unmeasured.
 
+## Step 10b — PDF tools, Office viewer fixes, a JVM test harness (2026-09-29)
+
+- **PDF tools** (from the peer comparison: CamScanner, Acrobat, Stirling-PDF). `pdf/PdfTools` (PdfBox) has
+  merge, extract pages (in tap order), delete pages (refuses to delete every page), rotate ±90°, add password (AES-128,
+  printing and copying still allowed) and remove password (a wrong password raises `WrongPdfPasswordException`).
+  `pdf/PdfToolRunner` reads through `PdfAccess` and writes a **new** file via `OutputFolder` (`Merged …`,
+  `<name>_pages`, `_rotated`, `_edited`, `_protected`, `_unlocked`). A failed write leaves no file behind
+  (`OutputFolder` deletes the pending entry).
+  - **Merge:** select two or more PDFs, and a Merge icon appears in the selection bar → Save as → the merged
+    PDF opens. Create sheet → "Merge PDFs" switches to PDFs, starts selection and says what to do.
+  - **Organize pages** (⋮ on a PDF): a page thumbnail grid. Tap to select, and badges show the order.
+    Extract / Rotate left / Rotate right / Delete, each with Save as; the result opens. Password-protected
+    PDFs explain that the password has to be removed first.
+  - **Add password / Remove password** (⋮ on a PDF; which one shows depends on the preview's lock state):
+    `ui/components/PasswordDialog`, masked with a show toggle. A new password is asked twice and needs at
+    least 4 characters. A wrong password keeps the dialog open with "Wrong password".
+  - A blocking "Working…" indicator shows while a tool runs, and a snackbar says "Saved to …".
+- **Bug fixes found by running the Office converters on the samples:**
+  - `OoxmlZip.normalise` turned `../media/image1.png` (from `ppt/slides/`) into `media/image1.png` instead of
+    `ppt/media/image1.png`, so **no PowerPoint picture was ever shown**. Targets are now resolved segment by segment.
+    `OoxmlPathTest` covers it.
+  - Excel cells printed stored binary floats (`92.40000000000001`). Numbers now show like Excel's default: 15
+    significant digits, no trailing zeros, no exponent (`XlsxToHtml.displayNumber`, tests in `XlsxColumnTest`).
+- **`tools/jvm-check/run.sh`**: the first real compile-and-test loop in this environment (no Android SDK here).
+  It downloads the stand-alone Kotlin compiler, JUnit, Apache PDFBox 2.0.27 and kxml2 from Maven Central, compiles
+  the Android-free sources (`SummaryParagraphs`, `FileNames`, the Office converters, `PdfTools` with the PdfBox
+  package swapped, since pdfbox-android is a port of 2.0.27), runs the unit tests plus `checks/PdfToolsCheck`
+  (merge order, extract order, delete, rotate, protect/unlock round trip) and converts the Office samples to HTML.
+
+Verified: `tools/jvm-check/run.sh` → **OK (27 tests)**. The converted samples were rendered in Chromium with
+JavaScript off and checked by eye (DOCX headings/lists/table, XLSX tabs and numbers, PPTX slide cards with the picture).
+Resources, braces and icon imports are checked. Not verified: the Compose screens (`OrganizePagesScreen`, the
+dialogs, the home wiring) have not been compiled, since they need the Android SDK and Google's Maven, which are blocked here.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

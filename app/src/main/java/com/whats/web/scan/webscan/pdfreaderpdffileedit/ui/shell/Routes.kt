@@ -45,6 +45,9 @@ object Routes {
     data object AiResult
 
     @Serializable
+    data class OrganizePages(val key: String)
+
+    @Serializable
     data object Paywall
 
     @Serializable

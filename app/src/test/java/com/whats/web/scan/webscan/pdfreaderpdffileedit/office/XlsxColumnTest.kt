@@ -26,4 +26,19 @@ class XlsxColumnTest {
         assertNull(XlsxToHtml.columnIndex(null))
         assertNull(XlsxToHtml.columnIndex("12"))
     }
+
+    @Test
+    fun `numbers show at most fifteen significant digits like Excel`() {
+        assertEquals("92.4", XlsxToHtml.displayNumber("92.40000000000001"))
+        assertEquals("0.3", XlsxToHtml.displayNumber("0.30000000000000004"))
+        assertEquals("950", XlsxToHtml.displayNumber("950"))
+        assertEquals("1500000", XlsxToHtml.displayNumber("1.5E6"))
+        assertEquals("0", XlsxToHtml.displayNumber("0.0"))
+    }
+
+    @Test
+    fun `non numbers pass through untouched`() {
+        assertEquals("#DIV/0!", XlsxToHtml.displayNumber("#DIV/0!"))
+        assertEquals("", XlsxToHtml.displayNumber(""))
+    }
 }

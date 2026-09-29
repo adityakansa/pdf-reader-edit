@@ -135,10 +135,10 @@ object XlsxToHtml {
                             columnsInRow++
                         }
                         val raw = cellText.toString()
-                        val text = if (cellType == "s") {
-                            strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
-                        } else {
-                            raw
+                        val text = when (cellType) {
+                            "s" -> strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
+                            null, "n" -> displayNumber(raw)
+                            else -> raw
                         }
                         out.append("<td>").append(OoxmlZip.escape(text)).append("</td>")
                         columnsInRow++
@@ -154,6 +154,20 @@ object XlsxToHtml {
         out.append("</table>")
         return Sheet(out.toString(), truncated)
     }
+
+    /**
+     * A stored number as Excel shows it by default: at most 15 significant digits, no trailing zeros, no
+     * exponent. Files keep binary floating-point values, so `92.4` is often stored as `92.400000000000006`.
+     * Anything that is not a plain number is returned as it was.
+     */
+    internal fun displayNumber(raw: String): String {
+        val trimmed = raw.trim()
+        val number = trimmed.toBigDecimalOrNull() ?: return raw
+        if (number.signum() == 0) return "0"
+        return number.round(java.math.MathContext(EXCEL_DIGITS)).stripTrailingZeros().toPlainString()
+    }
+
+    private const val EXCEL_DIGITS = 15
 
     /** "C12" → 2. Null when the reference is missing or malformed. */
     internal fun columnIndex(reference: String?): Int? {

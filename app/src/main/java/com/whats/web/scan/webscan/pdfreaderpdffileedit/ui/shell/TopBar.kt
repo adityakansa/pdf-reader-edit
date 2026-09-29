@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Share
@@ -40,6 +41,8 @@ fun HomeTopBar(
     selectionCount: Int,
     allSelected: Boolean,
     onSelectAll: () -> Unit,
+    canMerge: Boolean,
+    onMergeSelected: () -> Unit,
     onSearch: () -> Unit,
     onPro: () -> Unit,
     onSort: () -> Unit,
@@ -76,6 +79,11 @@ fun HomeTopBar(
                             if (allSelected) R.string.cd_deselect_all else R.string.cd_select_all,
                         ),
                     )
+                }
+                if (canMerge) {
+                    IconButton(onClick = onMergeSelected) {
+                        Icon(Icons.Filled.MergeType, contentDescription = stringResource(R.string.action_merge))
+                    }
                 }
                 IconButton(onClick = onShareSelected, enabled = selectionCount > 0) {
                     Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))

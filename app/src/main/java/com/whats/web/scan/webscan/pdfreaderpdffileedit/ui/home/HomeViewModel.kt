@@ -11,7 +11,12 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.LibraryFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.StorageAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.AppPreferences
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortOrder
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.IncomingFile
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfToolRunner
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.WrongPdfPasswordException
+import kotlinx.coroutines.CancellationException
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.HomeTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +49,8 @@ class HomeViewModel @Inject constructor(
     private val storageAccess: StorageAccess,
     private val pdfAccess: PdfAccess,
     private val prefs: AppPreferences,
+    private val tools: PdfToolRunner,
+    private val incoming: IncomingFile,
     entitlement: Entitlement,
 ) : ViewModel() {
     private val tab = MutableStateFlow(HomeTab.DOCUMENT)
@@ -138,6 +145,71 @@ class HomeViewModel @Inject constructor(
     fun shareableUri(file: DocFile) = repository.shareableUri(file)
 
     fun locationOf(file: DocFile) = repository.locationOf(file)
+
+    /** Merge is offered when two or more PDFs are selected. */
+    fun canMergeSelection(): Boolean {
+        val files = selectedFiles()
+        return files.size >= 2 && files.all { it.type == DocType.PDF }
+    }
+
+    /** Result of a PDF tool, for the screen to announce. */
+    sealed interface ToolResult {
+        data class Saved(val name: String) : ToolResult
+        data object WrongPassword : ToolResult
+        data object Failed : ToolResult
+    }
+
+    private val _toolBusy = MutableStateFlow(false)
+    val toolBusy: StateFlow<Boolean> = _toolBusy
+
+    private fun runTool(
+        openResult: Boolean,
+        onResult: (ToolResult) -> Unit,
+        work: suspend () -> OutputFolder.Output,
+    ) {
+        if (_toolBusy.value) return
+        _toolBusy.value = true
+        viewModelScope.launch {
+            val result = try {
+                val output = work()
+                if (openResult) incoming.offer(output.uri, "application/pdf")
+                ToolResult.Saved(output.name)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: WrongPdfPasswordException) {
+                ToolResult.WrongPassword
+            } catch (_: Exception) {
+                ToolResult.Failed
+            } finally {
+                _toolBusy.value = false
+            }
+            onResult(result)
+        }
+    }
+
+    /** Merges the selected PDFs in the order the list shows them, then opens the result. */
+    fun mergeSelected(name: String, onResult: (ToolResult) -> Unit) {
+        val files = selectedFiles()
+        if (files.size < 2) return
+        clearSelection()
+        runTool(openResult = true, onResult = onResult) { tools.merge(files, name) }
+    }
+
+    fun protect(file: DocFile, password: String, onResult: (ToolResult) -> Unit) =
+        runTool(openResult = false, onResult = onResult) { tools.protect(file, password) }
+
+    fun unlock(file: DocFile, password: String, onResult: (ToolResult) -> Unit) =
+        runTool(openResult = true, onResult = onResult) { tools.unlock(file, password) }
+
+    fun suggestedMergeName(): String = OutputFolder.mergedName()
+
+    /** Create sheet → "Merge PDFs": show only PDFs and start picking. */
+    fun startMergePicking() {
+        tab.value = HomeTab.DOCUMENT
+        filter.value = DocType.PDF
+        selection.value = emptySet()
+        selectionMode.value = true
+    }
 
     /** FR-018: page count for the File info dialog; null for anything that is not a readable PDF. */
     suspend fun pageCount(file: DocFile): Int? =

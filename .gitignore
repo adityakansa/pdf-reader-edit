@@ -18,3 +18,7 @@ local.properties
 
 # FR-068: fetched by scripts/fetch-summary-model.sh, never committed (65.5 MB)
 *.gguf
+
+# tools/jvm-check downloads and output
+tools/jvm-check/lib/
+tools/jvm-check/build/

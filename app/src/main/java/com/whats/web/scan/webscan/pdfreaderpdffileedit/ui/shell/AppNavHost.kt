@@ -35,6 +35,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.reader.PdfReaderScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.search.SearchScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.sign.PlaceOnPdfScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.settings.NoticesScreen
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.tools.OrganizePagesScreen
 
 @Composable
 fun AppNavHost(
@@ -79,6 +80,7 @@ fun AppNavHost(
                     onAi = { mode -> navController.navigate(Routes.AiFilePicker(mode.name)) },
                     onStorageAccess = { navController.navigate(Routes.StorageAccess) },
                     onNotices = { navController.navigate(Routes.Notices) },
+                    onOrganizePages = { file -> navController.navigate(Routes.OrganizePages(file.key)) },
                     canShowAds = canShowAds,
                 )
             }
@@ -94,6 +96,12 @@ fun AppNavHost(
             }
             composable<Routes.Paywall> {
                 PaywallScreen(onClose = { navController.popBackStack() })
+            }
+            composable<Routes.OrganizePages> { entry ->
+                OrganizePagesScreen(
+                    key = entry.toRoute<Routes.OrganizePages>().key,
+                    onBack = navController::popBackStack,
+                )
             }
             composable<Routes.Notices> {
                 NoticesScreen(onBack = navController::popBackStack)
