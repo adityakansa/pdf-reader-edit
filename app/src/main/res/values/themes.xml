@@ -10,6 +10,8 @@
     <style name="Theme.PDFReaderPDFFileEdit.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/app_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- The page is white; without a red disc it would vanish on the light splash background. -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/brand_red</item>
         <item name="postSplashScreenTheme">@style/Theme.PDFReaderPDFFileEdit</item>
     </style>
 </resources>

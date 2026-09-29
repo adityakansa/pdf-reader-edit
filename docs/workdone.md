@@ -96,6 +96,23 @@ converters read (`word/media/*`, `xl/worksheets/sheet{1,2}.xml` with `t="inlineS
 `ppt/media/*`). Not verified: no Android build or device run (same network block as Step 5), so the
 viewers were not run on these files and `XlsxColumnTest` has not been run.
 
+## Step 7 — brand icon and splash (2026-09-29)
+
+FRs touched: FR-006.
+
+- The template Android icon is gone. The adaptive icon is a brand-red field (`#D32F2F`, with a
+  darker `#B71C1C` band) behind a white page with a folded corner, a red "PDF" band, two text lines and a pen,
+  all inside the 66 dp safe zone. `ic_launcher_monochrome.xml` is a one-colour silhouette for Android 13 themed
+  icons. The ten template `.webp` mipmaps were deleted: minSdk is 26, so `mipmap-anydpi-v26` always applies.
+- Splash: the same foreground on a brand-red icon disc (`windowSplashScreenIconBackgroundColor`); a white page
+  on the `#F6F6F6` splash background would otherwise be invisible.
+- App label is now "PDF Reader & PDF File Edit" (26 characters) as FR-006 asks.
+
+Verified: the vector paths were rasterised with cairosvg (circle mask, and the monochrome layer on a tinted
+background) and checked by eye. Not verified: no Android build, so launcher masks on real devices were not
+seen. FR-006 also says the icon must match the Play listing icon; a 512 px store icon still has to be exported
+from these vectors when the listing is made.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

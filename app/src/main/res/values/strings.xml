@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PDF Reader &amp; File Edit</string>
+    <string name="app_name">PDF Reader &amp; PDF File Edit</string>
 
     <!-- Shell -->
     <string name="title_pdf">PDF</string>
