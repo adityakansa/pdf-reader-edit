@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.AppIcons
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupKind
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 
@@ -165,6 +166,8 @@ fun AnnotateBar(
     onPenColor: (Int) -> Unit,
     onUndo: () -> Unit,
     modifier: Modifier = Modifier,
+    erasing: Boolean = false,
+    onEraser: () -> Unit = {},
 ) {
     Surface(
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -172,7 +175,7 @@ fun AnnotateBar(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
-            if (tool == MarkupKind.INK) {
+            if (tool == MarkupKind.INK && !erasing) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -194,18 +197,19 @@ fun AnnotateBar(
                 }
             }
             Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                AnnotateTool(Icons.Filled.BorderColor, stringResource(R.string.action_highlight), tool == MarkupKind.HIGHLIGHT) {
+                AnnotateTool(Icons.Filled.BorderColor, stringResource(R.string.action_highlight), tool == MarkupKind.HIGHLIGHT && !erasing) {
                     onTool(MarkupKind.HIGHLIGHT)
                 }
-                AnnotateTool(Icons.Filled.FormatUnderlined, stringResource(R.string.annotate_underline), tool == MarkupKind.UNDERLINE) {
+                AnnotateTool(Icons.Filled.FormatUnderlined, stringResource(R.string.annotate_underline), tool == MarkupKind.UNDERLINE && !erasing) {
                     onTool(MarkupKind.UNDERLINE)
                 }
-                AnnotateTool(Icons.Filled.FormatStrikethrough, stringResource(R.string.annotate_strike), tool == MarkupKind.STRIKEOUT) {
+                AnnotateTool(Icons.Filled.FormatStrikethrough, stringResource(R.string.annotate_strike), tool == MarkupKind.STRIKEOUT && !erasing) {
                     onTool(MarkupKind.STRIKEOUT)
                 }
-                AnnotateTool(Icons.Filled.Gesture, stringResource(R.string.annotate_pen), tool == MarkupKind.INK) {
+                AnnotateTool(Icons.Filled.Gesture, stringResource(R.string.annotate_pen), tool == MarkupKind.INK && !erasing) {
                     onTool(MarkupKind.INK)
                 }
+                AnnotateTool(AppIcons.Eraser, stringResource(R.string.annotate_eraser), erasing, onClick = onEraser)
                 AnnotateTool(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.action_undo), false, enabled = canUndo, onClick = onUndo)
             }
         }

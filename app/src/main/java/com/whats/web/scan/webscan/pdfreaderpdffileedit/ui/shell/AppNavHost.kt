@@ -29,6 +29,9 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.HomeScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.LibraryCategory
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.RecycleBinScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.Tool
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.AfterSave
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.EditorTool
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.PdfEditorScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.StorageAccessScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.imagetopdf.ImageToPdfScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.scan.CameraScreen
@@ -77,7 +80,9 @@ fun AppNavHost(
     fun runTool(tool: Tool, file: DocFile) {
         when (tool) {
             Tool.ANNOTATE -> navController.navigate(Routes.Reader(file.key, annotate = true))
-            Tool.ADD_TEXT, Tool.FILL_SIGN ->
+            Tool.EDIT_TEXT -> navController.navigate(Routes.PdfEditor(file.key))
+            Tool.ADD_TEXT -> navController.navigate(Routes.PdfEditor(file.key, EditorTool.ADD_TEXT.name))
+            Tool.FILL_SIGN ->
                 navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(file.key) else Routes.Paywall)
             Tool.SPLIT_PDF, Tool.MANAGE_PAGES -> navController.navigate(Routes.OrganizePages(file.key))
             else -> startTool(tool)
@@ -137,6 +142,39 @@ fun AppNavHost(
                         runTool(tool, file)
                     },
                     type = tool.input ?: DocType.PDF,
+                )
+            }
+            composable<Routes.PdfEditor> { entry ->
+                val route = entry.toRoute<Routes.PdfEditor>()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                PdfEditorScreen(
+                    key = route.key,
+                    initialTool = route.tool?.let { runCatching { EditorTool.valueOf(it) }.getOrNull() },
+                    onBack = navController::popBackStack,
+                    onSaved = { saved ->
+                        navController.popBackStack()
+                        android.widget.Toast.makeText(
+                            context,
+                            context.getString(com.whats.web.scan.webscan.pdfreaderpdffileedit.R.string.saved_to, saved.name),
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                        val key = saved.key
+                        when {
+                            saved.then == AfterSave.ANNOTATE && key != null ->
+                                navController.navigate(Routes.Reader(key, annotate = true))
+                            saved.then == AfterSave.FILL_SIGN && key != null ->
+                                navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(key) else Routes.Paywall)
+                            else -> viewModel.open(saved.uri, "application/pdf")
+                        }
+                    },
+                    onAnnotate = { key ->
+                        navController.popBackStack()
+                        navController.navigate(Routes.Reader(key, annotate = true))
+                    },
+                    onFillSign = { key ->
+                        navController.popBackStack()
+                        navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(key) else Routes.Paywall)
+                    },
                 )
             }
             composable<Routes.RecycleBin> {
@@ -239,6 +277,7 @@ fun AppNavHost(
                 PdfReaderScreen(
                     key = route.key,
                     startAnnotating = route.annotate,
+                    onEdit = { key -> navController.navigate(Routes.PdfEditor(key)) },
                     onBack = navController::popBackStack,
                     onAiTranslate = { key ->
                         navController.navigate(Routes.SelectPage(key, AiMode.TRANSLATE.name))

@@ -10,6 +10,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.Bookmarks
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ReadingPositions
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupEraser
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.MarkupKind
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfMarkup
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfMarkupWriter
@@ -50,6 +51,8 @@ data class ReaderUiState(
     val pendingHighlights: List<PdfMarkup> = emptyList(),
     /** The annotate tool in use while [highlightMode] is on. */
     val markupTool: MarkupKind = MarkupKind.HIGHLIGHT,
+    /** Annotate → Eraser: taps and rubs remove unsaved marks instead of adding them. */
+    val erasing: Boolean = false,
     val penColor: Int = ReaderViewModel.PEN_COLORS.first(),
     val jumpTo: Int? = null,
     /** Bookmarked pages of this PDF, zero-based. */
@@ -202,11 +205,22 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun setMarkupTool(tool: MarkupKind) {
-        _state.value = _state.value.copy(markupTool = tool)
+        _state.value = _state.value.copy(markupTool = tool, erasing = false)
     }
 
     fun setPenColor(argb: Int) {
-        _state.value = _state.value.copy(penColor = argb, markupTool = MarkupKind.INK)
+        _state.value = _state.value.copy(penColor = argb, markupTool = MarkupKind.INK, erasing = false)
+    }
+
+    fun setErasing() {
+        _state.value = _state.value.copy(erasing = true)
+    }
+
+    /** Removes the unsaved marks under the finger. */
+    fun eraseAt(pageIndex: Int, x: Float, y: Float) {
+        val marks = _state.value.pendingHighlights
+        val left = MarkupEraser.erase(marks, pageIndex, x, y)
+        if (left.size != marks.size) _state.value = _state.value.copy(pendingHighlights = left)
     }
 
     /** Removes the most recent unsaved mark. */

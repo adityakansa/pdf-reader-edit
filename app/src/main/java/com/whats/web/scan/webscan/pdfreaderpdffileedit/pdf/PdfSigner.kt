@@ -53,6 +53,7 @@ object PdfSigner {
                     }
                 }
             }
+            PdfSecurity.prepareForSave(pdf, password)
             pdf.save(target)
         }
     }

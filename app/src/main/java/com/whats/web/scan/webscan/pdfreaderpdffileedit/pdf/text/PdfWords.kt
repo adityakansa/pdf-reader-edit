@@ -18,6 +18,10 @@ data class PdfWord(
     val top: Float,
     val right: Float,
     val bottom: Float,
+    /** The glyphs' size in points as drawn (0 when unknown); the PDF editor starts retyped text at this size. */
+    val fontSize: Float = 0f,
+    /** The PDF font's base name, e.g. "ABCDEF+Arial-BoldMT"; used to guess serif / bold / mono. */
+    val fontName: String = "",
 ) {
     /** True when this word falls inside the box the finger dragged over. */
     fun intersects(otherLeft: Float, otherTop: Float, otherRight: Float, otherBottom: Float): Boolean =
@@ -117,6 +121,7 @@ object PdfWords {
         val right = glyphs.maxOf { it.xDirAdj + it.widthDirAdj }
         val bottom = glyphs.maxOf { it.yDirAdj }
         val top = glyphs.minOf { it.yDirAdj - it.heightDir }
+        val sizes = glyphs.map { it.fontSizeInPt }.filter { it > 0f }.sorted()
         return PdfWord(
             text = text,
             pageIndex = pageIndex,
@@ -124,6 +129,8 @@ object PdfWords {
             top = (top / pageHeight).coerceIn(0f, 1f),
             right = (right / pageWidth).coerceIn(0f, 1f),
             bottom = (bottom / pageHeight).coerceIn(0f, 1f),
+            fontSize = sizes.getOrElse(sizes.size / 2) { 0f },
+            fontName = runCatching { glyphs.first().font?.name }.getOrNull().orEmpty(),
         )
     }
 }

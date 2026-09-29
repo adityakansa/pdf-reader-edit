@@ -31,6 +31,13 @@ class IncomingFile @Inject constructor(
     /** Lets the reader resolve a key that never came from [FileIndex]. */
     fun find(key: String): DocFile? = extra[key]
 
+    /** Makes a file the app just wrote resolvable by key, without opening it (the editor hands it to a tool). */
+    suspend fun register(uri: Uri, mimeType: String?): DocFile? {
+        val doc = describe(uri, mimeType) ?: return null
+        extra[doc.key] = doc
+        return doc
+    }
+
     suspend fun offer(uri: Uri, mimeType: String?) {
         val doc = describe(uri, mimeType) ?: return
         extra[doc.key] = doc

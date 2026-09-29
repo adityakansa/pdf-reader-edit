@@ -97,6 +97,7 @@ fun PdfReaderScreen(
     onPaywall: () -> Unit,
     /** Home → Annotate: open with the Annotate tools already showing. */
     startAnnotating: Boolean = false,
+    onEdit: (String) -> Unit = {},
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -303,6 +304,19 @@ fun PdfReaderScreen(
                 }
             }
         },
+        floatingActionButton = {
+            // The red pen of screen 71: straight into the PDF editor.
+            if (state.pages.isNotEmpty() && !state.highlightMode && !state.searching) {
+                androidx.compose.material3.FloatingActionButton(
+                    onClick = { onEdit(key) },
+                    containerColor = BrandRed,
+                    contentColor = androidx.compose.ui.graphics.Color.White,
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.menu_edit_pdf))
+                }
+            }
+        },
     ) { padding ->
         Box(
             Modifier
@@ -352,6 +366,8 @@ fun PdfReaderScreen(
                         penColor = state.penColor,
                         onInk = viewModel::addInk,
                         onHighlight = viewModel::highlight,
+                        erasing = state.erasing,
+                        onErase = viewModel::eraseAt,
                         jumpTo = state.jumpTo,
                         onJumped = viewModel::onJumped,
                         modifier = Modifier.weight(1f),
@@ -392,6 +408,8 @@ fun PdfReaderScreen(
                     canUndo = state.pendingHighlights.isNotEmpty(),
                     onTool = viewModel::setMarkupTool,
                     onPenColor = viewModel::setPenColor,
+                    erasing = state.erasing,
+                    onEraser = viewModel::setErasing,
                     onUndo = viewModel::undoMarkup,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )

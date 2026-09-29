@@ -34,12 +34,12 @@ for p in org/jetbrains/kotlin/kotlin-compiler-embeddable/$K/kotlin-compiler-embe
 done
 CP=$(ls "$LIB"/*.jar | tr '\n' ':')
 rm -rf "$OUT" && mkdir -p "$GEN"
-for f in PdfTools PdfMarkupWriter; do
-  sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/pdf/$f.kt" > "$GEN/$f.kt"
+for f in PdfTools PdfMarkupWriter MarkupEraser PdfPageEditor PdfSecurity text/PdfWords text/TextLines; do
+  sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/pdf/$f.kt" > "$GEN/$(basename "$f").kt"
 done
 sed 's/com\.tom_roush\.pdfbox/org.apache.pdfbox/g' "$P/search/DocumentText.kt" > "$GEN/DocumentText.kt"
 SRC=("$P/ai/SummaryParagraphs.kt" "$P/data/files/FileNames.kt" "$P/data/files/FolderNames.kt" "$P/office/OoxmlZip.kt" "$P/office/HtmlPage.kt"
-     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$P/office/SimpleMarkup.kt" "$P/office/DocxWriter.kt" "$P/office/EditorActions.kt" "$GEN/PdfTools.kt" "$GEN/PdfMarkupWriter.kt" "$GEN/DocumentText.kt" "$P"/office/legacy/*.kt "$HERE"/stubs/*.kt)
+     "$P/office/XlsxToHtml.kt" "$P/office/TextToHtml.kt" "$P/office/DocxToHtml.kt" "$P/office/PptxToHtml.kt" "$P/office/SimpleMarkup.kt" "$P/office/DocxWriter.kt" "$P/office/EditorActions.kt" "$GEN/PdfTools.kt" "$GEN/PdfMarkupWriter.kt" "$GEN/PdfPageEditor.kt" "$GEN/MarkupEraser.kt" "$GEN/PdfSecurity.kt" "$GEN/PdfWords.kt" "$GEN/TextLines.kt" "$GEN/DocumentText.kt" "$P"/office/legacy/*.kt "$HERE"/stubs/*.kt)
 TESTS=("$T/ai/SummaryParagraphsTest.kt" "$T/data/files/FileNamesTest.kt" "$T/data/files/FolderNamesTest.kt" "$T/office/XlsxColumnTest.kt"
        "$T/office/OoxmlPathTest.kt" "$T/office/TextToHtmlTest.kt" "$T/office/DocxFormatTest.kt" "$T/office/SimpleMarkupTest.kt" "$T/office/EditorActionsTest.kt" "$HERE"/checks/*.kt)
 java -cp "$CP" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler "${SRC[@]}" "${TESTS[@]}" \
@@ -55,6 +55,6 @@ java -Dsamples="$ROOT/app/src/main/assets/samples" -Dfixtures="$HERE/fixtures" -
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.DocxFormatTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.SimpleMarkupTest \
   com.whats.web.scan.webscan.pdfreaderpdffileedit.office.EditorActionsTest \
-  check.PdfToolsCheck check.MarkupCheck check.DocumentTextCheck check.LegacyCheck check.DocxWriterCheck 2>&1 | grep -v "JAVA_TOOL\|WARNING\|FileSystemFontProvider\|PDType1Font"
+  check.PdfToolsCheck check.PdfEditorCheck check.RestrictedPdfCheck check.MarkupEraserCheck check.MarkupCheck check.DocumentTextCheck check.LegacyCheck check.DocxWriterCheck 2>&1 | grep -v "JAVA_TOOL\|WARNING\|FileSystemFontProvider\|PDType1Font"
 java -cp "$OUT/classes:$CP" check.OfficeRunKt "$ROOT/app/src/main/assets/samples" "$OUT/office" 2>&1 | grep -v JAVA_TOOL
 echo "Office HTML written to $OUT/office"

@@ -62,6 +62,7 @@ object PdfMarkupWriter {
         document.use { open ->
             marks.filter { it.page in 0 until open.numberOfPages }.forEach { mark -> add(open, mark) }
             target.parentFile?.mkdirs()
+            PdfSecurity.prepareForSave(open, password)
             open.save(target)
         }
     }

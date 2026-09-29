@@ -51,6 +51,7 @@ object PdfTools {
             val doomed = pagesToKeep(pages, doc.numberOfPages)
             require(doomed.size < doc.numberOfPages) { "A PDF needs at least one page" }
             doomed.sortedDescending().forEach { doc.removePage(it) }
+            PdfSecurity.prepareForSave(doc, null)
             doc.save(target)
         }
     }
@@ -63,6 +64,7 @@ object PdfTools {
                 val page = doc.getPage(index)
                 page.rotation = normaliseRotation(page.rotation + degrees)
             }
+            PdfSecurity.prepareForSave(doc, null)
             doc.save(target)
         }
     }

@@ -429,4 +429,35 @@
         <item quantity="one">%d day left</item>
         <item quantity="other">%d days left</item>
     </plurals>
+
+    <!-- Step 12b: PDF editor -->
+    <string name="editor_tips">Tips</string>
+    <string name="editor_tips_body">• Edit text: tap any line with a dashed box and type. The old words are taken out of the page.\n• Add text: tap where the text should go.\n• Add image: pick a photo, then drag the round handles to move or resize it.\n• Pinch with two fingers to zoom in on small print.\n• Save writes a copy named “_edited”. Your original file is never changed.</string>
+    <string name="action_redo">Redo</string>
+    <string name="action_skip">Skip</string>
+    <string name="reader_password_body">Enter the password to open this document.</string>
+    <string name="editor_saving">Saving your edits…</string>
+    <string name="editor_save_failed_title">Could not save</string>
+    <string name="editor_save_failed_body">Your edits are still here. Check that the phone has free space, then try again.</string>
+    <string name="pdfedit_leave_title">Save your edits?</string>
+    <string name="pdfedit_leave_body">If you leave now, your changes to this PDF are lost.</string>
+    <string name="editor_save_first_title">Save your edits first?</string>
+    <string name="editor_save_first_body">Your edits are saved as a copy, and that copy opens in the next tool.</string>
+    <string name="editor_save_continue">Save and continue</string>
+    <string name="editor_move">Move</string>
+    <string name="editor_resize">Resize</string>
+    <string name="editor_hint_no_text">This page is a scanned image with no text to edit. Use Add text instead.</string>
+    <string name="editor_hint_edit">Tap any text to change it</string>
+    <string name="editor_hint_add_text">Tap where the new text should go</string>
+    <string name="editor_hint_add_image">Pick a picture, then drag it into place</string>
+    <string name="editor_add_image">Add image</string>
+    <string name="editor_bigger">Larger text</string>
+    <string name="editor_smaller">Smaller text</string>
+    <string name="editor_bold">Bold</string>
+    <string name="editor_italic">Italic</string>
+    <string name="editor_intro_title">Edit and format text easily.</string>
+    <string name="editor_intro_body">Fix a typo, change an amount or add a note, right on the page, then save it as a new copy.</string>
+    <string name="editor_try_now">Try now</string>
+    <string name="annotate_eraser">Eraser</string>
+    <string name="editor_intro_sample">2. Scope of Work</string>
 </resources>

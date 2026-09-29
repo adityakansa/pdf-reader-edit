@@ -74,7 +74,8 @@ Play page and screenshots cannot be reached from this environment, so its exact 
 | Search by name | ✅ | — |
 | Search text in all documents | ✅ "Inside files" with snippets, PDFs open at the page | 11d |
 | Bookmark pages | ✅ bookmarks + page thumbnail navigator + go to page | 11a |
-| Highlight, underline, strikethrough, doodle | ✅ Annotate: highlight, underline, strike, pen (3 colours), undo | 11c |
+| Highlight, underline, strikethrough, doodle | ✅ Annotate: highlight, underline, strike, pen (3 colours), eraser, undo | 11c, 12b |
+| PDF editor: edit text, add text, add image | ✅ retype any line (old words removed), size/colour/font/bold/italic, add text, add pictures | 12b |
 | Signature | ✅ (Pro) | 4 |
 | Merge / split PDF | ✅ merge; extract, rotate, delete pages | 10b |
 | Print | ✅ PDFs and every viewer page | 11a |

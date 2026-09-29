@@ -28,6 +28,10 @@ object Routes {
     @Serializable
     data object RecycleBin
 
+    /** The PDF editor; [tool] is an `EditorTool` name to start with (Home → Add text), null for Edit text. */
+    @Serializable
+    data class PdfEditor(val key: String, val tool: String? = null)
+
     @Serializable
     data class OfficeReader(val key: String)
 

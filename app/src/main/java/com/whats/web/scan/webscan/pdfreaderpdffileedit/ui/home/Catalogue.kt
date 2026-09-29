@@ -96,6 +96,7 @@ val readyTools: Set<Tool> = setOf(
     Tool.IMAGE_TO_PDF,
     Tool.SCAN_TO_PDF,
     Tool.CREATE_PDF,
+    Tool.EDIT_TEXT,
     Tool.ANNOTATE,
     Tool.ADD_TEXT,
     Tool.FILL_SIGN,

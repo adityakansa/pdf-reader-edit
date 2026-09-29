@@ -475,6 +475,64 @@ Matched to the new screenshots `docs/screenshots/photo_6187959494923456851_y.jpg
 Not verified: no Android build can run here (Google's Maven is blocked), so the new Compose code has not been
 compiled. The JVM harness covers only the Android-free code, which this step did not change.
 
+## Step 12b — PDF editor: edit text, add text, add image, eraser (2026-09-29)
+
+Answers "it has a PDF editor option — do we have that?" (screens 61–66). Yes, now:
+
+- **PDF editor** (`ui/pdfeditor/PdfEditorScreen`, route `PdfEditor(key, tool)`), opened from the reader's red pen
+  button (screen 71), Home → Edit text / Add text, or a PDF's ⋮ → Edit PDF.
+  - The bar is ✕, 💡 tips, undo, redo and Save. The bottom bar is **Edit text · Add text · Add image · Annotate ·
+    Fill & Sign**, the same five tools as screen 62. Pages zoom with two fingers, and a "150%" label shows while
+    zooming (screen 64).
+  - **Edit text**: every line of the page gets a dashed box. The words are grouped into lines by
+    `pdf/text/TextLines`: words on one line with less than about one letter height between them belong together,
+    so table cells stay separate ("Bus Fare" and "374.00"). A tap opens the line in a text field in the same
+    size, family (sans, serif, mono) and weight, with red corner handles to move and resize (screen 63).
+  - **Formatting bar** (screen 63): size up and down with the point size shown, a colour menu (7 colours), font
+    family (Aa), bold, italic, delete, and done.
+  - **Add text**: tap where the text goes. **Add image**: the photo picker; the photo is scaled down (JPEG, or PNG
+    when it has transparency) and can be dragged and resized in proportion.
+  - Annotate and Fill & Sign hand over to the reader's Annotate tools and to the signature screen. When there are
+    unsaved edits, the editor first offers "Save and continue".
+  - A **one-time intro** (screen 61): a mock page with a dashed text box, "Edit and format text easily.", Try now
+    or Skip.
+  - The editor is **free**. Signatures stay Pro, as before.
+- **Writing the edits** (`pdf/PdfPageEditor`) produces `<name>_edited.pdf`; the original file is never changed.
+  - **Retyped words are removed from the page**, not only covered. Every text-showing operator (`Tj`/`TJ`) whose
+    glyphs all lie inside the edited box is replaced by an empty `TJ` that moves the pen by the same distance, so
+    the rest of the line stays where it was. The old words can then no longer be copied or found by search, and a
+    coloured table cell keeps its colour.
+  - Only glyphs that share an operator with text outside the box, or that come from a form, are covered with
+    white. The white box is sized from the font size, so ascenders and descenders are hidden too.
+  - Retyped text sits exactly on the old baseline (`retypeBox`).
+  - Text uses PDF's built-in Helvetica, Times or Courier (with bold and italic). Characters those fonts cannot
+    encode, such as Cyrillic or Greek, use a system TrueType font instead (Roboto or Noto). Characters no font
+    can draw (for example Devanagari, which would also need shaping) are left out instead of failing the save.
+  - Handles page rotation 0/90/180/270: things land where the user saw them.
+- **A bug the new tests exposed, fixed everywhere**: PdfBox refuses to save a PDF it decrypted. So editing,
+  signing, annotating, rotating or deleting pages of a **password-protected** PDF failed. So did a PDF with only
+  **owner restrictions**, which opens without a password and is very common. The new `pdf/PdfSecurity` locks a
+  password-protected file again with the same password, and drops owner-only restrictions. It is used by the
+  editor, signer, markup writer and page tools.
+- **Annotate eraser** (screen 66): a new Eraser tool with a drawn icon (`ui/components/AppIcons.Eraser`, since
+  Material has no eraser). Tapping or rubbing over unsaved highlights, underlines, strike-throughs or pen strokes
+  removes them. Pen strokes are hit only near the line itself (`pdf/MarkupEraser`).
+- Harness: `checks/PdfEditorCheck` checks the editor on real PDFs, rendered with Apache PDFBox and the PNGs
+  inspected:
+  - lines split into table cells
+  - retyped words gone from the text, the neighbour on the same line unmoved, the baseline kept, the cell colour
+    kept
+  - the white cover used when words share an operator
+  - unchanged boxes write nothing
+  - wrapping, and the Cyrillic fallback font
+  - images placed, including on pages rotated 0/90/180/270
+  - protected PDFs stay protected
+
+  `RestrictedPdfCheck` covers owner-restricted PDFs; `MarkupEraserCheck` covers the eraser.
+
+Verified: `tools/jvm-check/run.sh` → **OK (75 tests)**. Every icon import was checked against the real icon jar.
+Not verified: the Compose editor on a device (keyboard, handles, zoom); no Android build can run here.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

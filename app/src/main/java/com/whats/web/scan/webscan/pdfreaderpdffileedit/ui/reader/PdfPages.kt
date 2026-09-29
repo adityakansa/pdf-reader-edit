@@ -71,6 +71,8 @@ fun PdfPages(
     tool: MarkupKind = MarkupKind.HIGHLIGHT,
     penColor: Int = 0xFF000000.toInt(),
     onInk: (page: Int, points: List<Pair<Float, Float>>) -> Unit = { _, _ -> },
+    erasing: Boolean = false,
+    onErase: (page: Int, x: Float, y: Float) -> Unit = { _, _, _ -> },
     onJumped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -118,6 +120,8 @@ fun PdfPages(
                 tool = tool,
                 penColor = penColor,
                 onInk = { points -> onInk(index, points) },
+                erasing = erasing,
+                onErase = { x, y -> onErase(index, x, y) },
                 modifier = Modifier.width(pageWidth),
             )
         }
@@ -136,6 +140,8 @@ private fun Page(
     tool: MarkupKind,
     penColor: Int,
     onInk: (List<Pair<Float, Float>>) -> Unit,
+    erasing: Boolean = false,
+    onErase: (Float, Float) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     var dragStart by remember { mutableStateOf<Offset?>(null) }
@@ -166,6 +172,18 @@ private fun Page(
                 .then(
                     if (!highlightMode) {
                         Modifier
+                    } else if (erasing) {
+                        // Tap a mark, or rub across several, to take them away.
+                        Modifier
+                            .pointerInput(index, "erase-tap") {
+                                detectTapGestures { onErase(it.x / size.width, it.y / size.height) }
+                            }
+                            .pointerInput(index, "erase-drag") {
+                                detectDragGestures(onDragStart = { onErase(it.x / size.width, it.y / size.height) }) { change, _ ->
+                                    change.consume()
+                                    onErase(change.position.x / size.width, change.position.y / size.height)
+                                }
+                            }
                     } else if (tool == MarkupKind.INK) {
                         Modifier.pointerInput(index, tool) {
                             detectDragGestures(
