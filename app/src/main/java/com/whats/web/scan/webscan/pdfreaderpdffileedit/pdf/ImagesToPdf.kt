@@ -31,12 +31,12 @@ class ImagesToPdf @Inject constructor(
         images: List<Uri>,
         pageSize: PdfPageSize,
         margin: PageMargin,
+        name: String = OutputFolder.imagesName(),
         onProgress: (Int) -> Unit = {},
     ): OutputFolder.Output = withContext(Dispatchers.IO) {
         require(images.isNotEmpty()) { "Pick at least one image" }
         val scratch = File(context.cacheDir, "pdf").apply { mkdirs() }
         val writer = PdfWriter(scratch)
-        val name = OutputFolder.imagesName()
         writer.begin(PdfOptions(title = name, pageSize = pageSize, marginPoints = margin.points)).use { builder ->
             images.take(MAX_IMAGES).forEachIndexed { index, uri ->
                 val bitmap = decodeUpright(uri) ?: return@forEachIndexed

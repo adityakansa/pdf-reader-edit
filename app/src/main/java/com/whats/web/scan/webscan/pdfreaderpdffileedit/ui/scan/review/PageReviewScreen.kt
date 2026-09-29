@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.SaveAsDialog
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.QuadEditing
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.NormalizedPoint
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PageFilter
@@ -90,6 +91,14 @@ fun PageReviewScreen(
     val deletedLabel = stringResource(R.string.page_deleted)
 
     LaunchedEffect(state.saved) { if (state.saved) onSaved() }
+    var saveAsName by remember { mutableStateOf<String?>(null) }
+    saveAsName?.let { suggested ->
+        SaveAsDialog(
+            suggested = suggested,
+            onSave = { name -> saveAsName = null; viewModel.save(name) },
+            onDismiss = { saveAsName = null },
+        )
+    }
     LaunchedEffect(state.undoable) {
         if (state.undoable == null) return@LaunchedEffect
         val result = snackbar.showSnackbar(deletedLabel, actionLabel = undoLabel)
@@ -141,7 +150,7 @@ fun PageReviewScreen(
                         modifier = Modifier.weight(1f),
                     ) { Text(stringResource(R.string.action_discard)) }
                     Button(
-                        onClick = viewModel::save,
+                        onClick = { saveAsName = viewModel.suggestedName() },
                         enabled = state.pages.isNotEmpty() && !state.saving,
                         modifier = Modifier.weight(1f),
                     ) { Text(stringResource(R.string.action_save)) }

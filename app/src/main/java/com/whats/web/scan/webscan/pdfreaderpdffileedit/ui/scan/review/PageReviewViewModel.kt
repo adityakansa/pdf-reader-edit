@@ -132,7 +132,9 @@ class PageReviewViewModel @Inject constructor(
     }
 
     /** FR-044: one PDF page per scan, in order, with each page's crop, filter and rotation applied. */
-    fun save() {
+    fun suggestedName(): String = OutputFolder.scanName()
+
+    fun save(name: String) {
         val pages = _state.value.pages
         if (pages.isEmpty() || _state.value.saving) return
         _state.value = _state.value.copy(saving = true)
@@ -140,7 +142,6 @@ class PageReviewViewModel @Inject constructor(
             val output = runCatching {
                 withContext(Dispatchers.Default) {
                     val scratch = File(context.cacheDir, "pdf").apply { mkdirs() }
-                    val name = OutputFolder.scanName()
                     PdfWriter(scratch).begin(PdfOptions(title = name)).use { builder ->
                         pages.forEach { page ->
                             val processed = PageProcessor.process(

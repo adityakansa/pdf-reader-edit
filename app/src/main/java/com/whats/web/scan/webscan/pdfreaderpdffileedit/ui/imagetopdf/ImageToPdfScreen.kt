@@ -34,6 +34,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -45,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.SaveAsDialog
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PageMargin
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PdfPageSize
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.dragReorder
@@ -71,6 +75,14 @@ fun ImageToPdfScreen(
         }
     }
     LaunchedEffect(state.saved) { if (state.saved) onSaved() }
+    var saveAsName by remember { mutableStateOf<String?>(null) }
+    saveAsName?.let { suggested ->
+        SaveAsDialog(
+            suggested = suggested,
+            onSave = { name -> saveAsName = null; viewModel.save(name) },
+            onDismiss = { saveAsName = null },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -109,7 +121,7 @@ fun ImageToPdfScreen(
                     onSelect = viewModel::setMargin,
                 )
                 Button(
-                    onClick = viewModel::save,
+                    onClick = { saveAsName = viewModel.suggestedName() },
                     enabled = state.images.isNotEmpty() && !state.saving,
                     modifier = Modifier
                         .fillMaxWidth()

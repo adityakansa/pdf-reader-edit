@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.billing.Entitlement
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileRepository
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ReadingPositions
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfMarkup
@@ -54,6 +55,7 @@ class ReaderViewModel @Inject constructor(
     private val repository: FileRepository,
     private val access: PdfAccess,
     private val outputFolder: OutputFolder,
+    private val positions: ReadingPositions,
     entitlement: Entitlement,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ReaderUiState())
@@ -86,11 +88,15 @@ class ReaderViewModel @Inject constructor(
                     session = result.session
                     source = result.source
                     val pages = result.session.pageSizes()
+                    // Reopen where the user stopped last time.
+                    val resume = positions.lastPage(key).takeIf { it in pages.indices && it > 0 }
                     _state.value = _state.value.copy(
                         loading = false,
                         pages = pages,
                         passwordRequired = false,
                         wrongPassword = false,
+                        currentPage = resume ?: 0,
+                        jumpTo = resume,
                     )
                     buildTextIndex(file)
                 }
@@ -126,7 +132,9 @@ class ReaderViewModel @Inject constructor(
         runCatching { session?.renderPage(index, widthPixels) }.getOrNull()
 
     fun onPageShown(index: Int) {
-        if (index != _state.value.currentPage) _state.value = _state.value.copy(currentPage = index)
+        if (index == _state.value.currentPage) return
+        _state.value = _state.value.copy(currentPage = index)
+        _state.value.file?.let { positions.save(it.key, index) }
     }
 
     fun toggleFavourite() {

@@ -186,6 +186,27 @@ Checks run (no compiler available): every `R.string`/`R.plurals` used in Kotlin 
 `strings.xml` parses with no duplicate names, and braces/parentheses balance in every Kotlin file changed in this
 session. Not verified: no Android build or device run.
 
+## Step 9c — quick wins from the review: resume page, name before save, Excel tabs (2026-09-29)
+
+FRs touched: FR-030, FR-034, FR-044, FR-041, FR-045.
+
+- **Resume where you stopped.** `data/prefs/ReadingPositions` (SharedPreferences, one int per file key, capped at
+  500 documents) is written on every page change. The reader jumps to the saved page when the PDF opens again.
+- **Name before saving** (scans and Image to PDF). Save opens "Save as PDF" with the suggested name
+  (`Scan …` / `Images …`) pre-selected, so typing replaces it and Save keeps it. `data/files/FileNames.sanitize`
+  replaces characters file systems reject, drops a typed `.pdf` and leading dots, caps the name at 120
+  characters, and falls back to the suggestion when the name is blank. `OutputFolder` still adds ` (n)` on
+  collisions. `FileNamesTest` covers the sanitiser. `ImagesToPdf.convert` and `PageReviewViewModel.save` take the name.
+- **FR-034 sheets as tabs.** A workbook with two or more sheets now shows one tab per sheet instead of stacked
+  headings. The WebView runs with JavaScript off, so the tabs are CSS only: a hidden radio button per sheet, a
+  label per tab and `:checked ~` rules. The tab row is sticky and the selected tab is underlined in brand red.
+  Limit: find-in-document only matches the visible sheet.
+
+Verified: the tab HTML/CSS, built the same way as `XlsxToHtml.tabs` and wrapped in `HtmlPage`, was loaded in
+Chromium with JavaScript disabled (Playwright). Tapping the second tab showed that sheet and hid the first.
+Resource and brace checks pass. Not verified: no Android build or device run; `FileNamesTest` and
+`XlsxColumnTest` have not been run.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

@@ -151,6 +151,8 @@
     <string name="action_crop">Crop</string>
     <string name="crop_apply">Apply</string>
     <string name="action_add_page">Add page</string>
+    <string name="save_as_title">Save as PDF</string>
+    <string name="save_as_name">File name</string>
     <string name="camera_permission_body">Scanning needs the camera. You can allow it in Settings.</string>
     <string name="open_settings">Open settings</string>
     <string name="page_deleted">Page deleted</string>

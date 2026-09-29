@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.IncomingFile
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PageMargin
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PdfPageSize
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.ImagesToPdf
@@ -57,13 +58,15 @@ class ImageToPdfViewModel @Inject constructor(
         _state.value = _state.value.copy(margin = margin)
     }
 
-    fun save() {
+    fun suggestedName(): String = OutputFolder.imagesName()
+
+    fun save(name: String) {
         val current = _state.value
         if (current.images.isEmpty() || current.saving) return
         _state.value = current.copy(saving = true)
         viewModelScope.launch {
             val output = runCatching {
-                imagesToPdf.convert(current.images, current.pageSize, current.margin)
+                imagesToPdf.convert(current.images, current.pageSize, current.margin, name)
             }.getOrNull()
             // The new file is not in the index yet, so it is handed over the same way an "Open with"
             // document is: the shell opens whatever lands there.

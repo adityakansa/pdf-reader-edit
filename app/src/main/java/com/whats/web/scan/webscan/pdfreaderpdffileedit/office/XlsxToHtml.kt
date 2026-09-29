@@ -15,18 +15,45 @@ object XlsxToHtml {
 
     fun convert(parts: Map<String, ByteArray>, rowCapNotice: String): String {
         val strings = sharedStrings(parts)
-        val sheets = sheetOrder(parts)
+        val sheets = sheetOrder(parts).mapNotNull { (name, path) ->
+            parts[path]?.let { bytes -> name to sheet(OoxmlZip.parser(bytes), strings) }
+        }
+        val truncated = sheets.any { it.second.truncated }
         val body = StringBuilder()
-        var truncated = false
-        sheets.forEach { (name, path) ->
-            val bytes = parts[path] ?: return@forEach
-            body.append("<div class=\"sheet-name\">").append(OoxmlZip.escape(name)).append("</div>")
-            val sheet = sheet(OoxmlZip.parser(bytes), strings)
-            truncated = truncated || sheet.truncated
-            body.append(sheet.html)
+        if (sheets.size <= 1) {
+            sheets.firstOrNull()?.let { body.append(it.second.html) }
+        } else {
+            body.append(tabs(sheets.map { it.first to it.second.html }))
         }
         if (truncated) body.append("<div class=\"notice\">").append(OoxmlZip.escape(rowCapNotice)).append("</div>")
         return HtmlPage.wrap(body.toString())
+    }
+
+    /**
+     * FR-034: one tab per sheet. The viewer runs with JavaScript off, so the tabs are CSS only: a hidden
+     * radio button per sheet, a label per tab, and a `:checked ~` rule that shows the matching panel.
+     */
+    internal fun tabs(sheets: List<Pair<String, String>>): String {
+        val out = StringBuilder("<div class=\"sheets\">")
+        val rules = StringBuilder("<style>")
+        sheets.indices.forEach { i ->
+            out.append("<input type=\"radio\" name=\"sheet\" class=\"sheet-radio\" id=\"s$i\"")
+            if (i == 0) out.append(" checked")
+            out.append(">")
+            rules.append("#s$i:checked ~ .sheet-panels .p$i{display:block}")
+            rules.append("#s$i:checked ~ .sheet-tabs label[for=s$i]{border-bottom-color:#D32F2F;color:#D32F2F}")
+        }
+        rules.append("</style>")
+        out.append("<div class=\"sheet-tabs\">")
+        sheets.forEachIndexed { i, (name, _) ->
+            out.append("<label for=\"s$i\">").append(OoxmlZip.escape(name)).append("</label>")
+        }
+        out.append("</div><div class=\"sheet-panels\">")
+        sheets.forEachIndexed { i, (_, html) ->
+            out.append("<div class=\"sheet-panel p$i\">").append(html).append("</div>")
+        }
+        out.append("</div></div>")
+        return rules.toString() + out.toString()
     }
 
     private data class Sheet(val html: String, val truncated: Boolean)

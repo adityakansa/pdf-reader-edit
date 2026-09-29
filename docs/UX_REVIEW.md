@@ -33,7 +33,7 @@ would force the app's source to be published. The client's decision is in TECH_S
 | Highlight | ✅ | — | ✅ | ✅ (to a `_highlighted` copy) |
 | Underline / strike-through / sticky notes / freehand | ✅ | — | ✅ | ❌ |
 | Page thumbnails / outline (bookmarks) | ✅ | — | ✅ | ❌ |
-| Remember last page when reopening | ✅ | — | ✅ | ❌ |
+| Remember last page when reopening | ✅ | — | ✅ | ✅ (Step 9c) |
 | Night / reading mode | ✅ (Liquid Mode, dark) | — | 🟡 | ❌ (app follows system dark theme; pages stay white) |
 | Select and copy text | ✅ | — | ✅ | ❌ |
 | Fill & sign | ✅ | ✅ | ✅ | ✅ (Pro) |
@@ -42,7 +42,7 @@ would force the app's source to be published. The client's decision is in TECH_S
 | Scan: on-screen guidance ("Hold steady") | — | ✅ | ✅ | ✅ (fixed now) |
 | Scan: crop, rotate, filters, reorder, delete + undo | — | ✅ | ✅ | ✅ |
 | Scan: OCR text layer in the saved PDF (searchable scan) | — | ✅ | ✅ | ❌ |
-| Scan: rename before saving | — | ✅ | ✅ | ❌ (auto name `Scan yyyy-MM-dd …`) |
+| Scan: rename before saving | — | ✅ | ✅ | ✅ (Step 9c, scans and image PDFs) |
 | Scan modes (ID card, book, whiteboard) | — | ✅ | ✅ | ❌ (document only, by design) |
 | PDF tools: merge, split, compress, rotate pages, password protect | ✅ (paid) | 🟡 | ✅ | ❌ |
 | Rename / move files | ✅ | ✅ | ✅ | ❌ |
@@ -89,12 +89,12 @@ Ranked by how much each one would confuse or hurt a user.
 | # | Gap | Why it matters | Effort |
 |---|---|---|---|
 | 1 | Build and test on a device | Nothing in this review has been run; the camera outline in particular maps analysis-frame coordinates onto a cropped preview and may be offset. | — |
-| 2 | Remember the last page per PDF | Everyone expects to resume where they stopped. | S |
+| 2 | ~~Remember the last page per PDF~~ | Done in Step 9c. | — |
 | 3 | Page thumbnail grid + outline (bookmarks) in the reader | Long PDFs are hard to move around without it. | M |
-| 4 | Rename before saving a scan / image PDF, and rename in the file menu | Auto names like `Scan 2026-09-29 18.04.11.pdf` are hard to find later. | S |
+| 4 | Rename in the file menu (naming before save is done in Step 9c) | Existing files still cannot be renamed. | S |
 | 5 | Searchable scans (OCR text layer on save) | Adobe Scan and CamScanner both do it; the OCR engine is already in the app. | M |
 | 6 | Text selection and copy in the PDF reader | Commonly expected. | M |
-| 7 | XLSX sheets as tabs (FR-034 says tabs; they are headings today) | Spec gap. | S |
+| 7 | ~~XLSX sheets as tabs~~ | Done in Step 9c (CSS-only tabs, checked in Chromium with JS off). Find-in-document only searches the visible sheet. | — |
 | 8 | Night mode for pages (invert render) | Reading comfort. | S |
 | 9 | More markup (underline, strike, note) | Reader parity. | M |
 | 10 | PDF tools: merge, split, compress, rotate pages | Main reason people pick CamScanner; not in the BRD, so a scope decision for the client. | L |
