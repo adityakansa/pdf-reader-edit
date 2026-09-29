@@ -131,6 +131,40 @@ Not verified: no Android build or device run (same network block as Step 5). Dra
 `visibleItemsInfo` offsets shifted by `viewportStartOffset`. If the grid's horizontal content padding is not in the
 item x offsets, the hit area is off by 12 dp. It needs checking by hand on a device.
 
+## Step 9a — usability pass: system bars, library, reader, search (2026-09-29)
+
+A screen-by-screen review of the code against the screenshots and against Adobe Acrobat Reader, Adobe Scan
+and CamScanner. The full review is in `docs/UX_REVIEW.md` (Step 9c). Fixed in this part:
+
+- **System bars (all screens).** Edge-to-edge is on (and forced from Android 15), but every top and bottom bar
+  is a custom row, so nothing reserved room for the status bar or the gesture bar. Icons sat under the clock
+  and the tabs under the gesture handle. `AppNavHost` now pads the whole host with `safeDrawingPadding()`
+  once. That consumes the insets, so Material app bars do not pad twice, and the IME inset is included. The
+  camera keeps a black backdrop.
+- **Selection mode (FR-019).** The select icon turned on selection mode with 0 files selected, but the top bar
+  only switched when the count was above 0. The user got checkboxes with no count, no close button and no way
+  out, and Back did not leave either. The top bar now follows `selectionMode`: close, "Select files" / "n
+  selected", Select all / Clear, and Share/Delete disabled at 0. Back leaves selection, and from another tab
+  Back returns to Document before it exits the app.
+- **Library states.** While the first scan runs, the list showed "No documents yet". `FileIndex.scanning`
+  now drives a "Looking for documents on your phone…" spinner. Empty tabs show an icon, a title, one line of
+  explanation and the next step (Document: Allow access / Scan document / Image to PDF).
+- **File info (FR-018)** now shows the PDF page count (it always passed `null`).
+- **Bottom bar.** Tabs were clickable boxes with no ripple and no semantics. They are now `selectable(role =
+  Tab)`, so TalkBack reads "Recent, tab, 2 of 4, selected". The Create button has a ripple and a Button role.
+- **PDF reader.** The password field showed the password in plain text; it is now masked with a show/hide
+  toggle, a password keyboard, and Open disabled until something is typed. System Back closed the document
+  even with search or highlight mode open; it now closes the mode first. Search gets the keyboard straight away,
+  shows "No matches" or "3/12", and its arrows have labels and are disabled with no matches. Highlight mode
+  shows "Drag over the text you want to highlight, then tap ✓ to save". Tapping the page chip opens "Go to
+  page". A file that fails to open shows why and a Go back button, not bare text.
+- **Office viewer.** Search shows the match count (`WebView.setFindListener`), labelled arrows, and Back
+  closes search first.
+- **Search screen.** The keyboard opens straight away, "No files named “x”" shows when nothing matches, and
+  the ⋮ button (which opened the file) is hidden there.
+
+Not verified: no Android build or device run (network block, see Step 5).
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

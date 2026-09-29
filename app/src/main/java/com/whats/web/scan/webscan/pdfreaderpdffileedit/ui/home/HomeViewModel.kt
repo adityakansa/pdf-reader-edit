@@ -10,6 +10,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileRepository
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.LibraryFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.StorageAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortOrder
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.HomeTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,8 @@ data class HomeUiState(
     val isPro: Boolean = false,
     val hasStorageAccess: Boolean = false,
     val sort: SortOrder = SortOrder(),
+    /** The phone is still being searched for documents. */
+    val scanning: Boolean = false,
 )
 
 @HiltViewModel
@@ -36,6 +39,7 @@ class HomeViewModel @Inject constructor(
     private val repository: FileRepository,
     private val index: FileIndex,
     private val storageAccess: StorageAccess,
+    private val pdfAccess: PdfAccess,
     entitlement: Entitlement,
 ) : ViewModel() {
     private val tab = MutableStateFlow(HomeTab.DOCUMENT)
@@ -50,8 +54,9 @@ class HomeViewModel @Inject constructor(
         combine(tab, filter) { t, f -> t to f },
         combine(selection, selectionMode) { s, m -> s to m },
         entitlement.isPro,
-        storageAccess.state,
-    ) { lists, tabFilter, sel, isPro, access ->
+        combine(storageAccess.state, index.scanning) { access, scanning -> access to scanning },
+    ) { lists, tabFilter, sel, isPro, accessScanning ->
+        val (access, scanning) = accessScanning
         val (all, recents, favourites) = lists
         val (currentTab, currentFilter) = tabFilter
         val source = when (currentTab) {
@@ -68,6 +73,7 @@ class HomeViewModel @Inject constructor(
             isPro = isPro,
             hasStorageAccess = access.hasFullAccess || access.grantedTrees.isNotEmpty() ||
                 access.grantedFiles.isNotEmpty(),
+            scanning = scanning,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -97,6 +103,12 @@ class HomeViewModel @Inject constructor(
         selection.value = if (key in selection.value) selection.value - key else selection.value + key
     }
 
+    /** Selects every file in the current tab and chip; a second tap clears them again. */
+    fun toggleSelectAll() {
+        val visible = state.value.files.map { it.file.key }.toSet()
+        selection.value = if (selection.value.containsAll(visible)) emptySet() else visible
+    }
+
     fun clearSelection() {
         selection.value = emptySet()
         selectionMode.value = false
@@ -119,4 +131,8 @@ class HomeViewModel @Inject constructor(
     fun shareableUri(file: DocFile) = repository.shareableUri(file)
 
     fun locationOf(file: DocFile) = repository.locationOf(file)
+
+    /** FR-018: page count for the File info dialog; null for anything that is not a readable PDF. */
+    suspend fun pageCount(file: DocFile): Int? =
+        if (file.type == DocType.PDF) runCatching { pdfAccess.pageCount(file.uri) }.getOrNull() else null
 }

@@ -49,6 +49,7 @@ fun FileRow(
     selectionMode: Boolean = false,
     selected: Boolean = false,
     onLongPress: () -> Unit = {},
+    showMenu: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -98,12 +99,14 @@ fun FileRow(
                         tint = if (item.favourite) BrandRed else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                IconButton(onClick = onMenu) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = stringResource(R.string.cd_more),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
+                if (showMenu) {
+                    IconButton(onClick = onMenu) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.cd_more),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }

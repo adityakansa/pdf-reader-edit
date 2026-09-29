@@ -1,6 +1,10 @@
 package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +16,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -24,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -32,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +100,11 @@ fun HomeScreen(
         viewModel.refresh()
     }
 
+    // FR-019: Back leaves selection first; from another tab it returns to Document before leaving the app.
+    BackHandler(enabled = state.selectionMode || state.tab != HomeTab.DOCUMENT) {
+        if (state.selectionMode) viewModel.clearSelection() else viewModel.selectTab(HomeTab.DOCUMENT)
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
@@ -92,7 +112,10 @@ fun HomeScreen(
             if (state.tab != HomeTab.SETTING) {
                 HomeTopBar(
                     isPro = state.isPro,
+                    selectionMode = state.selectionMode,
                     selectionCount = state.selected.size,
+                    allSelected = state.files.isNotEmpty() && state.selected.size == state.files.size,
+                    onSelectAll = viewModel::toggleSelectAll,
                     onSearch = onSearch,
                     onPro = onPaywall,
                     onSort = { showSort = true },
@@ -175,6 +198,8 @@ fun HomeScreen(
                     onToggleFavourite = { viewModel.toggleFavourite(it.key) },
                     onMenu = { menuFile = it },
                     onStorageAccess = onStorageAccess,
+                    onScan = onScan,
+                    onImageToPdf = onImageToPdf,
                 )
             }
         }
@@ -217,10 +242,11 @@ fun HomeScreen(
         )
     }
     infoFile?.let { file ->
+        val pages by produceState<Int?>(null, file.key) { value = viewModel.pageCount(file) }
         FileInfoDialog(
             file = file,
             location = viewModel.locationOf(file),
-            pages = null,
+            pages = pages,
             onDismiss = { infoFile = null },
         )
     }
@@ -250,11 +276,13 @@ private fun LibraryList(
     onToggleFavourite: (DocFile) -> Unit,
     onMenu: (DocFile) -> Unit,
     onStorageAccess: () -> Unit,
+    onScan: () -> Unit,
+    onImageToPdf: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TypeChips(selected = state.filter, onSelect = onFilter)
         if (state.files.isEmpty()) {
-            EmptyState(state, onStorageAccess)
+            EmptyState(state, onStorageAccess, onScan, onImageToPdf)
             return@Column
         }
         LazyColumn(
@@ -278,24 +306,81 @@ private fun LibraryList(
     }
 }
 
+/**
+ * What an empty list says. Adobe Acrobat and Adobe Scan never leave a blank screen: they say why it is
+ * empty and offer the next step, so this does the same per tab.
+ */
 @Composable
-private fun EmptyState(state: HomeUiState, onStorageAccess: () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+private fun EmptyState(
+    state: HomeUiState,
+    onStorageAccess: () -> Unit,
+    onScan: () -> Unit,
+    onImageToPdf: () -> Unit,
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
+        contentAlignment = Alignment.Center,
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (state.scanning && state.tab == HomeTab.DOCUMENT) {
+                CircularProgressIndicator(color = BrandRed)
+                Text(
+                    stringResource(R.string.library_scanning),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                return@Column
+            }
+            val (icon, title, body) = when (state.tab) {
+                HomeTab.RECENT -> Triple(Icons.Filled.History, R.string.empty_recent_title, R.string.empty_recent)
+                HomeTab.FAVOURITE -> Triple(Icons.Outlined.StarBorder, R.string.empty_favourite_title, R.string.empty_favourite)
+                else -> Triple(Icons.Outlined.Description, R.string.empty_documents, R.string.empty_documents_body)
+            }
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = BrandRed,
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(BrandRed.copy(alpha = 0.08f), CircleShape)
+                    .padding(16.dp),
+            )
             Text(
-                text = stringResource(
-                    when (state.tab) {
-                        HomeTab.RECENT -> R.string.empty_recent
-                        HomeTab.FAVOURITE -> R.string.empty_favourite
-                        else -> R.string.empty_documents
-                    },
-                ),
+                stringResource(title),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            Text(
+                stringResource(body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp),
             )
-            if (!state.hasStorageAccess && state.tab == HomeTab.DOCUMENT) {
-                androidx.compose.material3.TextButton(onClick = onStorageAccess) {
-                    Text(stringResource(R.string.storage_grant))
+            if (state.tab == HomeTab.DOCUMENT) {
+                if (!state.hasStorageAccess) {
+                    Button(
+                        onClick = onStorageAccess,
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandRed),
+                        modifier = Modifier.padding(top = 20.dp),
+                    ) { Text(stringResource(R.string.storage_grant)) }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(top = 12.dp),
+                ) {
+                    OutlinedButton(onClick = onScan) {
+                        Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.scan_document), modifier = Modifier.padding(start = 8.dp))
+                    }
+                    OutlinedButton(onClick = onImageToPdf) {
+                        Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.image_to_pdf), modifier = Modifier.padding(start = 8.dp))
+                    }
                 }
             }
         }

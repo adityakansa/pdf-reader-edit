@@ -1,6 +1,26 @@
 package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.reader
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.BorderColor
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.HighlightYellow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,6 +90,15 @@ fun PdfReaderScreen(
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var goToOpen by remember { mutableStateOf(false) }
+    val searchFocus = remember { FocusRequester() }
+
+    // Back closes whatever mode is open before it leaves the document, as Acrobat does.
+    BackHandler(enabled = state.searching || state.highlightMode) {
+        if (state.searching) viewModel.setSearching(false) else viewModel.setHighlightMode(false)
+    }
+    LaunchedEffect(state.searching) { if (state.searching) runCatching { searchFocus.requestFocus() } }
 
     LaunchedEffect(key) { viewModel.load(key) }
     LaunchedEffect(state.savedTo) {
@@ -101,22 +130,39 @@ fun PdfReaderScreen(
                     OutlinedTextField(
                         value = state.query,
                         onValueChange = viewModel::search,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(searchFocus),
                         singleLine = true,
-                        placeholder = { Text(stringResource(R.string.cd_search)) },
+                        placeholder = { Text(stringResource(R.string.reader_search_hint)) },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { viewModel.nextMatch() }),
                     )
-                    Text(
-                        text = if (state.matches.isEmpty()) "0" else "${state.matchIndex + 1}/${state.matches.size}",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    IconButton(onClick = viewModel::previousMatch) {
-                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null)
+                    if (state.query.isNotBlank()) {
+                        Text(
+                            text = if (state.matches.isEmpty()) {
+                                stringResource(R.string.reader_no_matches)
+                            } else {
+                                "${state.matchIndex + 1}/${state.matches.size}"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
                     }
-                    IconButton(onClick = viewModel::nextMatch) {
-                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+                    IconButton(onClick = viewModel::previousMatch, enabled = state.matches.isNotEmpty()) {
+                        Icon(
+                            Icons.Filled.KeyboardArrowUp,
+                            contentDescription = stringResource(R.string.cd_previous_match),
+                        )
+                    }
+                    IconButton(onClick = viewModel::nextMatch, enabled = state.matches.isNotEmpty()) {
+                        Icon(
+                            Icons.Filled.KeyboardArrowDown,
+                            contentDescription = stringResource(R.string.cd_next_match),
+                        )
                     }
                     IconButton(onClick = { viewModel.setSearching(false) }) {
-                        Icon(Icons.Filled.Close, contentDescription = null)
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_close_search))
                     }
                     return@Row
                 }
@@ -169,6 +215,7 @@ fun PdfReaderScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_highlight)) },
+                            leadingIcon = { Icon(Icons.Filled.BorderColor, contentDescription = null) },
                             onClick = { menuOpen = false; viewModel.setHighlightMode(true) },
                         )
                         DropdownMenuItem(
@@ -201,10 +248,34 @@ fun PdfReaderScreen(
             when {
                 state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
 
-                state.failed -> Text(
-                    stringResource(R.string.reader_open_failed),
-                    modifier = Modifier.align(Alignment.Center),
-                )
+                state.failed -> Column(
+                    Modifier
+                        .align(Alignment.Center)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        Icons.Filled.ErrorOutline,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp),
+                    )
+                    Text(
+                        stringResource(R.string.reader_open_failed),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    Text(
+                        stringResource(R.string.reader_open_failed_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                    OutlinedButton(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
+                        Text(stringResource(R.string.action_go_back))
+                    }
+                }
 
                 else -> Column(Modifier.fillMaxSize()) {
                     PdfPages(
@@ -228,11 +299,23 @@ fun PdfReaderScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            RoundedCornerShape(50),
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        .clickable(onClickLabel = stringResource(R.string.reader_go_to_page)) { goToOpen = true }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                )
+            }
+            if (state.highlightMode) {
+                // Without this the mode looks like the normal reader and people do not know what to do.
+                Text(
+                    stringResource(R.string.reader_highlight_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(8.dp)
+                        .background(HighlightYellow, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
             if (state.noTextFound) {
@@ -258,6 +341,28 @@ fun PdfReaderScreen(
                         onValueChange = { password = it },
                         singleLine = true,
                         label = { Text(stringResource(R.string.reader_password_hint)) },
+                        // A document password is a secret: masked by default, like every other password field.
+                        visualTransformation = if (showPassword) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { viewModel.load(key, password) }),
+                        isError = state.wrongPassword,
+                        trailingIcon = {
+                            IconButton(onClick = { showPassword = !showPassword }) {
+                                Icon(
+                                    if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = stringResource(
+                                        if (showPassword) R.string.cd_hide_password else R.string.cd_show_password,
+                                    ),
+                                )
+                            }
+                        },
                     )
                     if (state.wrongPassword) {
                         Text(
@@ -269,11 +374,46 @@ fun PdfReaderScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.load(key, password) }) {
-                    Text(stringResource(R.string.action_ok), fontWeight = FontWeight.Bold)
+                TextButton(onClick = { viewModel.load(key, password) }, enabled = password.isNotEmpty()) {
+                    Text(stringResource(R.string.action_open), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = { TextButton(onClick = onBack) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
+    if (goToOpen) {
+        GoToPageDialog(
+            pageCount = state.pages.size,
+            onGo = { page -> goToOpen = false; viewModel.goToPage(page - 1) },
+            onDismiss = { goToOpen = false },
+        )
+    }
+}
+
+/** Acrobat's "Go to page": type a number, jump there. */
+@Composable
+private fun GoToPageDialog(pageCount: Int, onGo: (Int) -> Unit, onDismiss: () -> Unit) {
+    var text by remember { mutableStateOf("") }
+    val page = text.toIntOrNull()?.takeIf { it in 1..pageCount }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.reader_go_to_page)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { value -> text = value.filter(Char::isDigit).take(6) },
+                singleLine = true,
+                label = { Text(stringResource(R.string.reader_page_range, pageCount)) },
+                isError = text.isNotEmpty() && page == null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
+                keyboardActions = KeyboardActions(onGo = { page?.let(onGo) }),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { page?.let(onGo) }, enabled = page != null) {
+                Text(stringResource(R.string.action_go))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
 }

@@ -1,6 +1,7 @@
 package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.reader
 
 import android.webkit.WebView
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,8 +61,26 @@ fun OfficeReaderScreen(
     var webView by remember { mutableStateOf<WebView?>(null) }
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
+    var matchActive by remember { mutableIntStateOf(0) }
+    var matchTotal by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(key) { viewModel.load(key, rowCapNotice) }
+    LaunchedEffect(webView) {
+        webView?.setFindListener { active, total, done ->
+            if (done) {
+                matchActive = active
+                matchTotal = total
+            }
+        }
+    }
+
+    fun closeSearch() {
+        searching = false
+        query = ""
+        matchTotal = 0
+        webView?.clearMatches()
+    }
+    BackHandler(enabled = searching) { closeSearch() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -87,21 +107,28 @@ fun OfficeReaderScreen(
                         },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        placeholder = { Text(stringResource(R.string.cd_search)) },
+                        placeholder = { Text(stringResource(R.string.reader_search_hint)) },
                     )
-                    IconButton(onClick = { webView?.findNext(false) }) {
-                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null)
+                    if (query.isNotBlank()) {
+                        Text(
+                            if (matchTotal == 0) {
+                                stringResource(R.string.reader_no_matches)
+                            } else {
+                                "${matchActive + 1}/$matchTotal"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
                     }
-                    IconButton(onClick = { webView?.findNext(true) }) {
-                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+                    IconButton(onClick = { webView?.findNext(false) }, enabled = matchTotal > 0) {
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.cd_previous_match))
                     }
-                    IconButton(
-                        onClick = {
-                            searching = false
-                            query = ""
-                            webView?.clearMatches()
-                        },
-                    ) { Icon(Icons.Filled.Close, contentDescription = null) }
+                    IconButton(onClick = { webView?.findNext(true) }, enabled = matchTotal > 0) {
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.cd_next_match))
+                    }
+                    IconButton(onClick = { closeSearch() }) {
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_close_search))
+                    }
                     return@Row
                 }
                 Column(Modifier.weight(1f)) {

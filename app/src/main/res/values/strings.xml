@@ -26,10 +26,19 @@
 
     <!-- Library -->
     <string name="search_hint">Search in file</string>
+    <string name="search_no_results">No files named “%1$s”</string>
     <string name="clear">Clear</string>
     <string name="empty_documents">No documents yet</string>
-    <string name="empty_recent">Files you open show up here</string>
-    <string name="empty_favourite">Star a file to find it here</string>
+    <string name="empty_recent">Files you open will appear here, newest first.</string>
+    <string name="empty_favourite">Tap the star next to any file to keep it here for quick access.</string>
+    <string name="empty_recent_title">No recent files</string>
+    <string name="empty_favourite_title">No favourites yet</string>
+    <string name="empty_documents_body">Scan paper documents or turn photos into a PDF to get started.</string>
+    <string name="library_scanning">Looking for documents on your phone…</string>
+    <string name="select_files">Select files</string>
+    <string name="cd_exit_selection">Exit selection</string>
+    <string name="cd_select_all">Select all</string>
+    <string name="cd_deselect_all">Clear selection</string>
     <string name="sample_file">Sample File</string>
     <string name="sort_title">Sort by</string>
     <string name="sort_name">Name</string>
@@ -70,10 +79,24 @@
 
     <!-- Reader -->
     <string name="reader_page_of">%1$d / %2$d</string>
-    <string name="reader_no_text">No text found</string>
-    <string name="reader_password_title">Password required</string>
+    <string name="reader_no_text">This PDF has no searchable text (it may be a scan)</string>
+    <string name="reader_search_hint">Find in document</string>
+    <string name="reader_no_matches">No matches</string>
+    <string name="cd_previous_match">Previous match</string>
+    <string name="cd_next_match">Next match</string>
+    <string name="cd_close_search">Close search</string>
+    <string name="reader_open_failed_body">The file may be damaged, moved, or in a format this app cannot read.</string>
+    <string name="action_go_back">Go back</string>
+    <string name="reader_go_to_page">Go to page</string>
+    <string name="reader_page_range">Page (1–%1$d)</string>
+    <string name="action_go">Go</string>
+    <string name="reader_highlight_hint">Drag over the text you want to highlight, then tap ✓ to save</string>
+    <string name="cd_show_password">Show password</string>
+    <string name="cd_hide_password">Hide password</string>
+    <string name="action_open">Open</string>
+    <string name="reader_password_title">This PDF is password protected</string>
     <string name="reader_password_hint">Password</string>
-    <string name="reader_password_wrong">Wrong password</string>
+    <string name="reader_password_wrong">Wrong password. Please try again.</string>
     <string name="reader_open_failed">This file could not be opened</string>
     <string name="reader_simplified">Simplified view</string>
     <string name="reader_legacy_format">This older format opens in another app</string>

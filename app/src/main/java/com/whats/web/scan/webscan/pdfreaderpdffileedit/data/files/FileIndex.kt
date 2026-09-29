@@ -39,10 +39,21 @@ class FileIndex @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val refreshes = MutableSharedFlow<Unit>(replay = 1, extraBufferCapacity = 1)
     private val outputs = MutableStateFlow(0)
+    private val _scanning = MutableStateFlow(true)
+
+    /** True while a scan is running, so an empty list reads "Looking for documents…", not "No documents". */
+    val scanning: StateFlow<Boolean> = _scanning
 
     val files: StateFlow<List<DocFile>> =
         combine(refreshes.onStart { emit(Unit) }, storageAccess.state, outputs) { _, access, _ -> access }
-            .map { access -> scan(access) }
+            .map { access ->
+                _scanning.value = true
+                try {
+                    scan(access)
+                } finally {
+                    _scanning.value = false
+                }
+            }
             .flowOn(Dispatchers.IO)
             .stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

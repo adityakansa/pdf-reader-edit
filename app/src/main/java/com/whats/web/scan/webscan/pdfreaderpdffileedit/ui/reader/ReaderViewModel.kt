@@ -168,6 +168,12 @@ class ReaderViewModel @Inject constructor(
         _state.value = _state.value.copy(matchIndex = next, jumpTo = matches[next].pageIndex)
     }
 
+    /** "Go to page" from the page indicator; [index] is zero based. */
+    fun goToPage(index: Int) {
+        if (index !in _state.value.pages.indices) return
+        _state.value = _state.value.copy(jumpTo = index)
+    }
+
     fun onJumped() {
         _state.value = _state.value.copy(jumpTo = null)
     }

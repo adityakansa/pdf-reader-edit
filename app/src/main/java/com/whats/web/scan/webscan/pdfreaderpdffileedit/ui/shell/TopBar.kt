@@ -8,8 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
@@ -34,7 +36,10 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.CrownGold
 @Composable
 fun HomeTopBar(
     isPro: Boolean,
+    selectionMode: Boolean,
     selectionCount: Int,
+    allSelected: Boolean,
+    onSelectAll: () -> Unit,
     onSearch: () -> Unit,
     onPro: () -> Unit,
     onSort: () -> Unit,
@@ -51,19 +56,31 @@ fun HomeTopBar(
                 .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (selectionCount > 0) {
+            if (selectionMode) {
                 IconButton(onClick = onExitSelection) {
-                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_back))
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_exit_selection))
                 }
                 Text(
-                    text = stringResource(R.string.selected_count, selectionCount),
+                    text = if (selectionCount == 0) {
+                        stringResource(R.string.select_files)
+                    } else {
+                        stringResource(R.string.selected_count, selectionCount)
+                    },
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(onClick = onShareSelected) {
+                IconButton(onClick = onSelectAll) {
+                    Icon(
+                        if (allSelected) Icons.Filled.Deselect else Icons.Filled.SelectAll,
+                        contentDescription = stringResource(
+                            if (allSelected) R.string.cd_deselect_all else R.string.cd_select_all,
+                        ),
+                    )
+                }
+                IconButton(onClick = onShareSelected, enabled = selectionCount > 0) {
                     Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
                 }
-                IconButton(onClick = onDeleteSelected) {
+                IconButton(onClick = onDeleteSelected, enabled = selectionCount > 0) {
                     Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
                 }
                 return@Row

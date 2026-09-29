@@ -12,6 +12,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -41,7 +47,10 @@ fun SearchScreen(
     val results by viewModel.results.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isPro by viewModel.isPro.collectAsStateWithLifecycle()
+    val focus = androidx.compose.runtime.remember { FocusRequester() }
     androidx.compose.runtime.LaunchedEffect(pdfOnly) { viewModel.setPdfOnly(pdfOnly) }
+    // The whole point of this screen is typing, so the keyboard opens with it.
+    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -67,9 +76,13 @@ fun SearchScreen(
                 OutlinedTextField(
                     value = query,
                     onValueChange = viewModel::setQuery,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focus),
                     singleLine = true,
                     shape = MaterialTheme.shapes.extraLarge,
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     placeholder = { Text(stringResource(R.string.search_hint)) },
                     trailingIcon = {
                         if (query.isNotEmpty()) {
@@ -83,13 +96,25 @@ fun SearchScreen(
                     },
                 )
             }
+            if (results.isEmpty() && query.isNotBlank()) {
+                Text(
+                    stringResource(R.string.search_no_results, query),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    textAlign = TextAlign.Center,
+                )
+            }
             LazyColumn(Modifier.fillMaxSize()) {
                 items(results, key = { it.file.key }) { item ->
                     FileRow(
                         item = item,
                         onOpen = { onOpenFile(item.file) },
                         onToggleFavourite = { viewModel.toggleFavourite(item.file.key) },
-                        onMenu = { onOpenFile(item.file) },
+                        onMenu = {},
+                        showMenu = false,
                     )
                 }
             }
