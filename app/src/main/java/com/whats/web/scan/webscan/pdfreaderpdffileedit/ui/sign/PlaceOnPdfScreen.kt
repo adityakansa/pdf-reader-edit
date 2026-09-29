@@ -2,6 +2,7 @@ package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.sign
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,8 +26,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Image as ImageIcon
@@ -52,13 +56,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,6 +91,13 @@ fun PlaceOnPdfScreen(
     val context = LocalContext.current
     var padOpen by remember { mutableStateOf(false) }
     var stampOpen by remember { mutableStateOf(false) }
+    var confirmLeave by remember { mutableStateOf(false) }
+    var deleteSignature by remember { mutableStateOf<File?>(null) }
+
+    fun leave() {
+        if (state.placements.isNotEmpty() && !state.saved) confirmLeave = true else onBack()
+    }
+    BackHandler { leave() }
 
     val pickPhoto = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
@@ -105,7 +120,7 @@ fun PlaceOnPdfScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.action_edit_sign)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { leave() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back),
@@ -136,15 +151,17 @@ fun PlaceOnPdfScreen(
                         ) {
                             SignatureThumb(file)
                             IconButton(
-                                onClick = { viewModel.deleteSignature(file) },
+                                onClick = { deleteSignature = file },
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
-                                    .size(20.dp),
+                                    .size(32.dp),
                             ) {
                                 Icon(
-                                    Icons.Filled.Delete,
-                                    contentDescription = stringResource(R.string.action_delete),
-                                    modifier = Modifier.size(14.dp),
+                                    Icons.Filled.Close,
+                                    contentDescription = stringResource(R.string.signature_delete),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .background(MaterialTheme.colorScheme.surface, CircleShape),
                                 )
                             }
                         }
@@ -156,21 +173,11 @@ fun PlaceOnPdfScreen(
                         .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    IconButton(onClick = { padOpen = true }) {
-                        Icon(Icons.Filled.Draw, contentDescription = stringResource(R.string.signature_new))
+                    SignTool(Icons.Filled.Draw, stringResource(R.string.signature_new)) { padOpen = true }
+                    SignTool(Icons.Filled.ImageIcon, stringResource(R.string.signature_import)) {
+                        pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     }
-                    IconButton(
-                        onClick = {
-                            pickPhoto.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                    ) {
-                        Icon(Icons.Filled.ImageIcon, contentDescription = stringResource(R.string.signature_import))
-                    }
-                    IconButton(onClick = { stampOpen = true }) {
-                        Icon(Icons.Filled.TextFields, contentDescription = stringResource(R.string.add_text))
-                    }
+                    SignTool(Icons.Filled.TextFields, stringResource(R.string.add_text)) { stampOpen = true }
                 }
                 Button(
                     onClick = viewModel::save,
@@ -196,6 +203,21 @@ fun PlaceOnPdfScreen(
                     state.failed -> Text(stringResource(R.string.reader_open_failed))
                     state.pages.isEmpty() -> CircularProgressIndicator()
                     else -> PageCanvas(state, viewModel)
+                }
+                if (!state.saving && state.pages.isNotEmpty() && state.placements.none { it.page == state.currentPage }) {
+                    Text(
+                        stringResource(
+                            if (state.signatures.isEmpty()) R.string.sign_hint_create else R.string.sign_hint_place,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(12.dp)
+                            .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                 }
             }
             LazyRow(
@@ -235,6 +257,51 @@ fun PlaceOnPdfScreen(
             onConfirm = { text -> viewModel.addText(text); stampOpen = false },
             onDismiss = { stampOpen = false },
         )
+    }
+    deleteSignature?.let { file ->
+        AlertDialog(
+            onDismissRequest = { deleteSignature = null },
+            title = { Text(stringResource(R.string.signature_delete_title)) },
+            text = { Text(stringResource(R.string.signature_delete_body)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.deleteSignature(file); deleteSignature = null }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteSignature = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+    if (confirmLeave) {
+        AlertDialog(
+            onDismissRequest = { confirmLeave = false },
+            title = { Text(stringResource(R.string.sign_leave_title)) },
+            text = { Text(stringResource(R.string.sign_leave_body)) },
+            confirmButton = {
+                TextButton(onClick = { confirmLeave = false; onBack() }) {
+                    Text(stringResource(R.string.action_discard), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmLeave = false }) { Text(stringResource(R.string.sign_keep_editing)) }
+            },
+        )
+    }
+}
+
+/** A labelled tool, so "draw a signature" is never a guess from an icon. */
+@Composable
+private fun SignTool(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Icon(icon, contentDescription = null)
+        Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }
 

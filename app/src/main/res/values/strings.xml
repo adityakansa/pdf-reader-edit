@@ -130,6 +130,27 @@
     <string name="filter_enhanced">Enhanced</string>
     <string name="filter_grey">Grey</string>
     <string name="filter_bw">B&amp;W</string>
+    <string name="cd_close_camera">Close camera</string>
+    <string name="capture_auto">Auto</string>
+    <string name="capture_manual">Manual</string>
+    <string name="flash_on">Flash on</string>
+    <string name="flash_off">Flash off</string>
+    <string name="scan_hint_searching">Point the camera at a document</string>
+    <string name="scan_hint_hold_steady">Hold steady…</string>
+    <string name="scan_hint_tap">Tap the button to capture</string>
+    <string name="scan_hint_capturing">Capturing…</string>
+    <string name="scan_import">Import</string>
+    <string name="cd_shutter">Capture page</string>
+    <string name="scan_done_count">Done (%1$d)</string>
+    <string name="scan_discard_title">Discard scan?</string>
+    <plurals name="scan_discard_body">
+        <item quantity="one">Your %1$d scanned page will be deleted.</item>
+        <item quantity="other">Your %1$d scanned pages will be deleted.</item>
+    </plurals>
+    <string name="scan_keep_review">Keep and review</string>
+    <string name="action_crop">Crop</string>
+    <string name="crop_apply">Apply</string>
+    <string name="action_add_page">Add page</string>
     <string name="camera_permission_body">Scanning needs the camera. You can allow it in Settings.</string>
     <string name="open_settings">Open settings</string>
     <string name="page_deleted">Page deleted</string>
@@ -141,6 +162,14 @@
     <string name="signature_limit">Delete one signature first — you can keep 3.</string>
     <string name="signature_none_found">No signature found in that photo</string>
     <string name="add_text">Add text</string>
+    <string name="signature_delete">Delete signature</string>
+    <string name="signature_delete_title">Delete this signature?</string>
+    <string name="signature_delete_body">It will be removed from this phone. Signatures already saved into PDFs are not affected.</string>
+    <string name="sign_hint_create">Tap “Draw signature” to create one, or add text</string>
+    <string name="sign_hint_place">Tap a signature below to place it, then drag, pinch or twist to adjust</string>
+    <string name="sign_leave_title">Discard your changes?</string>
+    <string name="sign_leave_body">The signatures and text you placed have not been saved.</string>
+    <string name="sign_keep_editing">Keep editing</string>
     <string name="add_date">Add date</string>
 
     <!-- AI -->

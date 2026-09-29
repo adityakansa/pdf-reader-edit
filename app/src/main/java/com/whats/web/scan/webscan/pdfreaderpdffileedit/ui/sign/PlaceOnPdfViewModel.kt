@@ -146,9 +146,13 @@ class PlaceOnPdfViewModel @Inject constructor(
         )
     }
 
+    /** Saves a drawn signature and puts it straight on the page, as Adobe Fill & Sign does. */
     fun saveSignature(bitmap: Bitmap) = viewModelScope.launch {
-        if (store.save(bitmap) == null) {
+        val file = store.save(bitmap)
+        if (file == null) {
             _state.value = _state.value.copy(signatureLimitReached = true)
+        } else if (_state.value.pages.isNotEmpty()) {
+            addSignature(file)
         }
     }
 
@@ -169,7 +173,7 @@ class PlaceOnPdfViewModel @Inject constructor(
         if (ink == null) {
             _state.value = _state.value.copy(noInkFound = true)
         } else {
-            store.save(ink)
+            store.save(ink)?.let { file -> if (_state.value.pages.isNotEmpty()) addSignature(file) }
         }
     }
 

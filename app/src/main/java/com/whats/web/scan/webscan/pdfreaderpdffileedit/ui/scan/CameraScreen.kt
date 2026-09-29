@@ -6,6 +6,33 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.MotionPhotosAuto
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.CrownGold
+import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,11 +55,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -79,6 +101,7 @@ fun CameraScreen(
     var granted by remember { mutableStateOf(hasCamera(context)) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     val executor = remember { Executors.newSingleThreadExecutor() }
+    val scope = rememberCoroutineScope()
 
     val permission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -93,8 +116,23 @@ fun CameraScreen(
     }
     DisposableEffect(Unit) { onDispose { executor.shutdown() } }
 
+    var confirmExit by remember { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
+    // A white blink on every shot, like the system camera, so a capture never goes unnoticed.
+    val shutterFlash = remember { Animatable(0f) }
+
+    fun leave() {
+        if (state.pageCount > 0) confirmExit = true else onBack()
+    }
+    BackHandler { leave() }
+
     fun capture() {
         val capture = imageCapture ?: return
+        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        scope.launch {
+            shutterFlash.snapTo(0.7f)
+            shutterFlash.animateTo(0f, tween(SHUTTER_FLASH_MILLIS))
+        }
         viewModel.captureStarted()
         capture.takePicture(
             executor,
@@ -183,85 +221,172 @@ fun CameraScreen(
             EdgeOutline(state.quad, Modifier.fillMaxSize())
         }
 
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.White.copy(alpha = shutterFlash.value)),
+        )
+
         Row(
             Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopStart)
-                .padding(8.dp),
+                .background(Color.Black.copy(alpha = 0.35f))
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { viewModel.discard(); onBack() }) {
+            IconButton(onClick = { leave() }) {
                 Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.cd_back),
+                    Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.cd_close_camera),
                     tint = Color.White,
                 )
             }
             Box(Modifier.weight(1f))
-            IconButton(onClick = viewModel::toggleAutoCapture) {
-                Icon(
-                    Icons.Filled.Timer,
-                    contentDescription = null,
-                    tint = if (state.autoCapture) BrandRed else Color.White,
-                )
-            }
-            IconButton(onClick = viewModel::toggleFlash) {
-                Icon(
-                    Icons.Filled.Bolt,
-                    contentDescription = null,
-                    tint = if (state.flashOn) BrandRed else Color.White,
-                )
-            }
+            // Labelled toggles: an icon alone ("timer"? "bolt"?) is what confuses people in scanner apps.
+            CameraToggle(
+                icon = if (state.autoCapture) Icons.Filled.MotionPhotosAuto else Icons.Filled.TouchApp,
+                label = stringResource(if (state.autoCapture) R.string.capture_auto else R.string.capture_manual),
+                active = state.autoCapture,
+                onClick = viewModel::toggleAutoCapture,
+            )
+            CameraToggle(
+                icon = if (state.flashOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                label = stringResource(if (state.flashOn) R.string.flash_on else R.string.flash_off),
+                active = state.flashOn,
+                onClick = viewModel::toggleFlash,
+            )
+        }
+
+        if (granted) {
+            Text(
+                text = stringResource(
+                    when {
+                        state.capturing -> R.string.scan_hint_capturing
+                        state.quad == null -> R.string.scan_hint_searching
+                        state.autoCapture -> R.string.scan_hint_hold_steady
+                        else -> R.string.scan_hint_tap
+                    },
+                ),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 72.dp)
+                    .background(Color.Black.copy(alpha = 0.55f), RoundedCornerShape(50))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
         }
 
         Row(
             Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(24.dp),
+                .background(Color.Black.copy(alpha = 0.35f))
+                .padding(horizontal = 24.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(
-                onClick = {
-                    pickPhotos.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                    )
-                },
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(role = Role.Button) {
+                        pickPhotos.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    }
+                    .padding(8.dp),
             ) {
-                Icon(Icons.Filled.Image, contentDescription = null, tint = Color.White)
+                Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = Color.White)
+                Text(
+                    stringResource(R.string.scan_import),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
+            val shutterLabel = stringResource(R.string.cd_shutter)
             Box(
                 Modifier
-                    .size(72.dp)
-                    .background(Color.White, CircleShape)
-                    .padding(6.dp)
-                    .background(BrandRed, CircleShape)
-                    .clickable(enabled = !state.capturing) { capture() },
-            )
-            Box {
-                IconButton(onClick = onReview, enabled = state.pageCount > 0) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = stringResource(R.string.action_done),
-                        tint = if (state.pageCount > 0) Color.White else Color.Gray,
-                    )
-                }
-                if (state.pageCount > 0) {
-                    Text(
-                        state.pageCount.toString(),
+                    .size(76.dp)
+                    .border(4.dp, Color.White, CircleShape)
+                    .padding(8.dp)
+                    .clip(CircleShape)
+                    .background(if (state.capturing) BrandRed.copy(alpha = 0.5f) else BrandRed)
+                    .clickable(enabled = !state.capturing, role = Role.Button) { capture() }
+                    .semantics { contentDescription = shutterLabel },
+                contentAlignment = Alignment.Center,
+            ) {
+                // Auto-capture fills the ring as the page holds still, so the wait is visible.
+                if (state.autoCapture && state.autoCaptureProgress > 0f) {
+                    CircularProgressIndicator(
+                        progress = { state.autoCaptureProgress },
                         color = Color.White,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .background(BrandRed, CircleShape)
-                            .padding(horizontal = 5.dp),
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
+            }
+            Button(
+                onClick = onReview,
+                enabled = state.pageCount > 0,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black,
+                    disabledContainerColor = Color.White.copy(alpha = 0.3f),
+                    disabledContentColor = Color.White.copy(alpha = 0.7f),
+                ),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    if (state.pageCount > 0) {
+                        stringResource(R.string.scan_done_count, state.pageCount)
+                    } else {
+                        stringResource(R.string.action_done)
+                    },
+                )
             }
         }
     }
+
+    if (confirmExit) {
+        AlertDialog(
+            onDismissRequest = { confirmExit = false },
+            title = { Text(stringResource(R.string.scan_discard_title)) },
+            text = {
+                Text(
+                    pluralStringResource(R.plurals.scan_discard_body, state.pageCount, state.pageCount),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { confirmExit = false; viewModel.discard(); onBack() }) {
+                    Text(stringResource(R.string.action_discard), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmExit = false; onReview() }) {
+                    Text(stringResource(R.string.scan_keep_review))
+                }
+            },
+        )
+    }
 }
+
+@Composable
+private fun CameraToggle(icon: ImageVector, label: String, active: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Switch, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        Icon(icon, contentDescription = null, tint = if (active) CrownGold else Color.White)
+        Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+private const val SHUTTER_FLASH_MILLIS = 220
 
 /** FR-042: the detected page drawn over the preview, in the preview's own coordinates. */
 @Composable

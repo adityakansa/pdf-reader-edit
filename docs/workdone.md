@@ -165,6 +165,27 @@ and CamScanner. The full review is in `docs/UX_REVIEW.md` (Step 9c). Fixed in th
 
 Not verified: no Android build or device run (network block, see Step 5).
 
+## Step 9b — usability pass: camera, scan review, sign; review document (2026-09-29)
+
+- **Camera (FR-042).** Back and the close button deleted every captured page without asking. Both now ask
+  "Discard scan?" with Discard / Keep and review. The auto-capture and flash toggles have text labels
+  (Auto/Manual, Flash on/off) and state icons. A status pill says "Point the camera at a document" / "Hold
+  steady…" / "Tap the button to capture" / "Capturing…". The shutter has a spoken label, a ring that fills with
+  auto-capture progress, a haptic tick and a white blink. Gallery is "Import" with a label, and the check mark
+  is a "Done (n)" button. The top and bottom bars have a scrim so the white controls stay readable over a white page.
+- **Scan review (FR-043/044).** The tool icons have labels (Crop/Apply, Rotate, Delete, Add page; "+" was a text
+  button). Discard now asks first, as the FR-044 AC requires.
+- **Edit/Sign (FR-050–052).** The tools have labels. Deleting a saved signature was a 20 dp target that acted
+  immediately; it is now 32 dp with a confirmation. A newly drawn or imported signature is placed on the
+  current page straight away. A hint says what to do next ("Tap a signature below to place it…"). Back with unsaved
+  placements asks "Discard your changes?".
+- `docs/UX_REVIEW.md`: the libraries used per format, a comparison with Acrobat Reader / Adobe Scan /
+  CamScanner, the 16 fixes from Steps 8–9, and the 12 gaps still open in recommended order.
+
+Checks run (no compiler available): every `R.string`/`R.plurals` used in Kotlin exists in `strings.xml`,
+`strings.xml` parses with no duplicate names, and braces/parentheses balance in every Kotlin file changed in this
+session. Not verified: no Android build or device run.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

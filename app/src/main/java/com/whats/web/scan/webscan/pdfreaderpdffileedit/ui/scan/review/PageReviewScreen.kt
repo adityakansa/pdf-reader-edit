@@ -5,6 +5,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -28,7 +34,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -79,6 +84,7 @@ fun PageReviewScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var cropping by remember { mutableStateOf(false) }
+    var confirmDiscard by remember { mutableStateOf(false) }
     val page = state.pages.getOrNull(state.current)
     val undoLabel = stringResource(R.string.action_undo)
     val deletedLabel = stringResource(R.string.page_deleted)
@@ -114,20 +120,15 @@ fun PageReviewScreen(
                         .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    IconButton(onClick = { cropping = !cropping }) {
-                        Icon(
-                            Icons.Filled.Crop,
-                            contentDescription = null,
-                            tint = if (cropping) BrandRed else MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                    IconButton(onClick = viewModel::rotate) {
-                        Icon(Icons.Filled.RotateRight, contentDescription = stringResource(R.string.action_rotate))
-                    }
-                    IconButton(onClick = viewModel::delete) {
-                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
-                    }
-                    TextButton(onClick = onAddPage) { Text("+") }
+                    ReviewTool(
+                        icon = Icons.Filled.Crop,
+                        label = stringResource(if (cropping) R.string.crop_apply else R.string.action_crop),
+                        active = cropping,
+                        onClick = { cropping = !cropping },
+                    )
+                    ReviewTool(Icons.Filled.RotateRight, stringResource(R.string.action_rotate), onClick = viewModel::rotate)
+                    ReviewTool(Icons.Filled.Delete, stringResource(R.string.action_delete), onClick = viewModel::delete)
+                    ReviewTool(Icons.Filled.AddAPhoto, stringResource(R.string.action_add_page), onClick = onAddPage)
                 }
                 Row(
                     Modifier
@@ -136,7 +137,7 @@ fun PageReviewScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     TextButton(
-                        onClick = { viewModel.discard(); onBack() },
+                        onClick = { confirmDiscard = true },
                         modifier = Modifier.weight(1f),
                     ) { Text(stringResource(R.string.action_discard)) }
                     Button(
@@ -209,6 +210,45 @@ fun PageReviewScreen(
                 }
             }
         }
+    }
+
+    if (confirmDiscard) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscard = false },
+            title = { Text(stringResource(R.string.scan_discard_title)) },
+            text = {
+                Text(pluralStringResource(R.plurals.scan_discard_body, state.pages.size, state.pages.size))
+            },
+            confirmButton = {
+                TextButton(onClick = { confirmDiscard = false; viewModel.discard(); onBack() }) {
+                    Text(stringResource(R.string.action_discard), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDiscard = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+}
+
+/** An icon with its name under it — "Crop", "Rotate", "Delete", "Add page" — as Adobe Scan labels its tools. */
+@Composable
+private fun ReviewTool(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    active: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val tint = if (active) BrandRed else MaterialTheme.colorScheme.onSurface
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Icon(icon, contentDescription = null, tint = tint)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = tint)
     }
 }
 
