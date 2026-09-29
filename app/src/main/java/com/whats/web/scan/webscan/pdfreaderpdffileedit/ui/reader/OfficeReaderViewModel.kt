@@ -12,6 +12,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OoxmlZip
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.PptxToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.TextToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.XlsxToHtml
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.LegacyToHtml
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,19 @@ class OfficeReaderViewModel @Inject constructor(
         viewModelScope.launch {
             repository.markOpened(key)
             if (file.isLegacyOffice) {
-                _state.value = _state.value.copy(loading = false, legacy = true)
+                // Office 97–2003: read in-app; only a file we cannot read goes to "open with another app".
+                val legacyHtml = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val bytes = context.contentResolver.openInputStream(file.uri)?.use { it.readBytes() }
+                            ?: return@runCatching null
+                        LegacyToHtml.convert(file.ext, bytes, rowCapNotice)
+                    }.getOrNull()
+                }
+                _state.value = if (legacyHtml != null) {
+                    _state.value.copy(loading = false, html = legacyHtml, baseUrl = null)
+                } else {
+                    _state.value.copy(loading = false, legacy = true)
+                }
                 return@launch
             }
             val mediaDir = File(context.cacheDir, "office-media")

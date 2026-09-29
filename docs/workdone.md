@@ -368,6 +368,34 @@ since there is no Android build here.
 Verified: `tools/jvm-check/run.sh` → **OK (46 tests)**. Not verified: Compose UI (folder list, content results)
 and search speed on a phone with thousands of files.
 
+## Step 11e (part 1) — Office 97–2003 files open in the app (2026-09-29)
+
+Old `.doc`, `.xls` and `.ppt` files used to show only "This older format opens in another app". They now open in
+the same viewer as their modern versions. The old message remains the fallback for files that cannot be read
+(encrypted, Word 6/95, not really a compound file).
+
+- `office/legacy/Cfb`: the Compound File Binary ("OLE2") container. Header, FAT via header DIFAT plus DIFAT sectors,
+  directory, mini FAT and mini stream; 512- and 4096-byte sectors. Every chain walk is bounded with a loop guard,
+  and every read is bounds-checked, so a corrupt file fails cleanly instead of looping or crashing.
+- `LegacyDoc` (Word 97+): FIB → table stream (`0Table`/`1Table`) → CLX piece table → text, compressed (cp1252) and
+  UTF-16 pieces. Field codes are dropped and field results kept. Paragraphs, line breaks, page breaks and tables
+  (cell marks, with the row count taken from the first row) are split out. Formatting is not read.
+- `LegacyXls` (BIFF8): BOUNDSHEET sheets. The SST is reassembled across CONTINUE records (the width flag restarts
+  at each boundary). Also reads LABELSST, LABEL, NUMBER, RK, MULRK, BOOLERR, and FORMULA cached results (numbers,
+  booleans, errors, strings via the STRING record). Numbers show Excel-style.
+- `LegacyPpt`: slide text from `SlideListWithText` (slides only, not master or notes; title vs body from
+  TextHeaderAtom), with a fallback to the slide containers. "Fast-saved" files append a new document on every save;
+  the last slide list is used, which removed a duplicated stale slide seen in testing.
+- `LegacyToHtml`: Word → page cards (split at page breaks, tables as bordered tables); Excel → the spreadsheet grid
+  with sheet tabs; PowerPoint → 4:3 slide cards with a centred title and bullets.
+- Search inside files now covers `.doc`, `.xls` and `.ppt` too (`DocumentText.legacy`).
+- Harness: `checks/LegacyCheck` runs the readers on six real files from Apache POI's test data
+  (`tools/jvm-check/fixtures/legacy`, Apache-2.0, see NOTICE; used only for testing, not shipped).
+
+Verified: `tools/jvm-check/run.sh` → **OK (53 tests)**. The output was read (e.g. SampleDoc: 3 paragraphs, page break,
+3 paragraphs; simple-table.doc: a 2×3 table; SampleSS.xls: 3 sheets; SampleShow.ppt: 2 slides with titles and
+bullets, curly quotes intact) and rendered in Chromium. Not verified: Compose wiring on a device.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

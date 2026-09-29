@@ -43,6 +43,10 @@ body.deck .slide-number { margin: 10px 2px 6px; }
 .deck-slide .shape p { margin: 0 0 0.4em; }
 .deck-slide .shape .bullet { display: inline-block; width: 1.1em; }
 .deck-slide .shape-img { position: absolute; object-fit: fill; max-width: none; }
+.legacy-slide { position: absolute; inset: 0; padding: 5cqw 6cqw; overflow: hidden; }
+.legacy-title { font-size: 5.2cqw; font-weight: 600; text-align: center; margin-bottom: 3cqw; }
+.legacy-body { font-size: 3.2cqw; margin: 0; padding-left: 4cqw; line-height: 1.3; }
+.legacy-body li { margin-bottom: 1cqw; }
 .doc-page { background: #ffffff; color: #1a1a1a; border-radius: 2px; padding: 28px 22px 32px; margin: 0 auto 14px;
   max-width: 820px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.06); font-size: 14.7px; line-height: 1.45;
   font-family: 'Calibri', 'Carlito', 'Roboto', sans-serif; overflow-wrap: anywhere; }

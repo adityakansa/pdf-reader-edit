@@ -5,6 +5,10 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OoxmlZip
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.TextToHtml
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.Cfb
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.LegacyDoc
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.LegacyPpt
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.LegacyXls
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
 import java.io.InputStream
@@ -22,6 +26,7 @@ object DocumentText {
         "pdf" -> pdf(input, scratch)
         "docx", "xlsx", "pptx" -> listOf(ooxml(OoxmlZip.read(input), ext.lowercase()))
         "txt", "csv" -> listOf(cap(TextToHtml.decode(input.readBytes())))
+        "doc", "xls", "ppt" -> listOf(cap(legacy(ext.lowercase(), input.readBytes())))
         else -> emptyList()
     }
 
@@ -40,6 +45,25 @@ object DocumentText {
                 text
             }
         }
+    }
+
+    /** Office 97–2003 text through the compound-file readers; unreadable files give no text. */
+    fun legacy(ext: String, bytes: ByteArray): String {
+        if (!Cfb.isCompoundFile(bytes)) return ""
+        return runCatching {
+            val cfb = Cfb(bytes)
+            when (ext) {
+                "doc" -> LegacyDoc.cleanFields(LegacyDoc.text(cfb))
+                    .replace('\r', '\n').replace('\u0007', ' ').replace('\u000C', '\n')
+                "xls" -> LegacyXls.read(cfb).joinToString("\n") { sheet ->
+                    sheet.rows.joinToString("\n") { it.joinToString(" ") }
+                }
+                "ppt" -> LegacyPpt.read(cfb).joinToString("\n") { slide ->
+                    listOfNotNull(slide.title).plus(slide.body).joinToString("\n")
+                }
+                else -> ""
+            }
+        }.getOrDefault("")
     }
 
     /** Word paragraphs, spreadsheet cells and slide text, separated by line breaks. */

@@ -95,6 +95,6 @@ class ContentSearch @Inject constructor(@ApplicationContext private val context:
         const val MEMORY_CHARS = 4_000_000
         const val MAX_SNIPPETS = 2
         const val PAGE_BREAK = '\u000C'
-        val SEARCHABLE = setOf("pdf", "docx", "xlsx", "pptx", "txt", "csv")
+        val SEARCHABLE = setOf("pdf", "docx", "xlsx", "pptx", "txt", "csv", "doc", "xls", "ppt")
     }
 }
