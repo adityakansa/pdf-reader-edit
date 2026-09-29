@@ -8,7 +8,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import android.view.WindowManager
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.AppPreferences
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ThemeMode
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.IncomingFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.Thumbnails
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.LocalThumbnails
@@ -29,14 +35,30 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var thumbnails: Thumbnails
 
+    @Inject
+    lateinit var prefs: AppPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
+        // Settings → Keep screen on holds the screen awake while the app is in front.
+        lifecycleScope.launch {
+            prefs.keepScreenOn.collect { on ->
+                if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
         setContent {
+            val themeMode by prefs.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+            val dark = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
             CompositionLocalProvider(LocalThumbnails provides thumbnails) {
-                AppTheme {
+                AppTheme(darkTheme = dark) {
                     AppNavHost(viewModel = viewModel)
                 }
             }

@@ -16,6 +16,9 @@ enum class SortField { NAME, DATE, SIZE }
 /** How the library shows files: rows, page-preview cards, or grouped by folder. */
 enum class LibraryView { LIST, GRID, FOLDERS }
 
+/** Settings → App theme. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
 data class SortOrder(val field: SortField = SortField.DATE, val ascending: Boolean = false)
 
 private val Context.dataStore by preferencesDataStore("app_prefs")
@@ -29,6 +32,11 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     private val proKey = booleanPreferencesKey("is_pro")
     private val samplesKey = booleanPreferencesKey("samples_installed")
     private val viewKey = stringPreferencesKey("library_view")
+    private val defaultBannerKey = booleanPreferencesKey("default_banner_dismissed")
+    private val keepScreenOnKey = booleanPreferencesKey("keep_screen_on")
+    private val themeKey = stringPreferencesKey("theme_mode")
+    private val ratingKey = booleanPreferencesKey("rating_asked")
+    private val editorIntroKey = booleanPreferencesKey("editor_intro_shown")
 
     val sortOrder: Flow<SortOrder> = context.dataStore.data.map { p ->
         SortOrder(
@@ -61,4 +69,30 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     suspend fun setProCached(isPro: Boolean) = context.dataStore.edit { it[proKey] = isPro }
 
     suspend fun setSamplesInstalled(installed: Boolean) = context.dataStore.edit { it[samplesKey] = installed }
+
+    /** Home's "Set as default reader" banner, once closed, stays closed. */
+    val defaultBannerDismissed: Flow<Boolean> = context.dataStore.data.map { it[defaultBannerKey] ?: false }
+
+    suspend fun dismissDefaultBanner() = context.dataStore.edit { it[defaultBannerKey] = true }
+
+    /** Settings → Keep screen on: the screen stays awake while the app is in front. */
+    val keepScreenOn: Flow<Boolean> = context.dataStore.data.map { it[keepScreenOnKey] ?: false }
+
+    suspend fun setKeepScreenOn(on: Boolean) = context.dataStore.edit { it[keepScreenOnKey] = on }
+
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { p ->
+        p[themeKey]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM
+    }
+
+    suspend fun setThemeMode(mode: ThemeMode) = context.dataStore.edit { it[themeKey] = mode.name }
+
+    /** The "Are you satisfied?" sheet is asked once, after a successful conversion or save. */
+    val ratingAsked: Flow<Boolean> = context.dataStore.data.map { it[ratingKey] ?: false }
+
+    suspend fun setRatingAsked() = context.dataStore.edit { it[ratingKey] = true }
+
+    /** The PDF editor's one-page introduction is shown the first time only. */
+    val editorIntroShown: Flow<Boolean> = context.dataStore.data.map { it[editorIntroKey] ?: false }
+
+    suspend fun setEditorIntroShown() = context.dataStore.edit { it[editorIntroKey] = true }
 }

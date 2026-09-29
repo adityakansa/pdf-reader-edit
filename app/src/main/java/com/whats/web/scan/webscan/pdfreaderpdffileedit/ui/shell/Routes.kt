@@ -13,8 +13,20 @@ object Routes {
     @Serializable
     data object StorageAccess
 
+    /** [annotate] opens straight into the Annotate tools (Home → Annotate). */
     @Serializable
-    data class Reader(val key: String)
+    data class Reader(val key: String, val annotate: Boolean = false)
+
+    /** Home → a card. [category] is a `ui/home/LibraryCategory` name; [merge] opens it picking PDFs to merge. */
+    @Serializable
+    data class FileList(val category: String, val merge: Boolean = false)
+
+    /** Home → a tool that needs a file: pick one of the tool's input type first. [tool] is a `Tool` name. */
+    @Serializable
+    data class ToolPicker(val tool: String)
+
+    @Serializable
+    data object RecycleBin
 
     @Serializable
     data class OfficeReader(val key: String)

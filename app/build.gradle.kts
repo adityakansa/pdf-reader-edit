@@ -39,6 +39,8 @@ android {
         buildConfigField("String", "AD_BANNER_UNIT", "\"${property("AD_BANNER_UNIT")}\"")
         buildConfigField("String", "AD_NATIVE_UNIT", "\"${property("AD_NATIVE_UNIT")}\"")
         buildConfigField("String", "PRIVACY_POLICY_URL", "\"${property("PRIVACY_POLICY_URL")}\"")
+        buildConfigField("String", "TERMS_URL", "\"${property("TERMS_URL")}\"")
+        buildConfigField("String", "SUPPORT_EMAIL", "\"${property("SUPPORT_EMAIL")}\"")
     }
 
     buildTypes {

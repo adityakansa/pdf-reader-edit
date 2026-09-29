@@ -9,27 +9,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.MergeType
-import androidx.compose.material.icons.filled.NoteAdd
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -84,12 +78,6 @@ fun SortSheet(
                     label = { Text(stringResource(R.string.view_grid)) },
                     leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null) },
                 )
-                FilterChip(
-                    selected = view == LibraryView.FOLDERS,
-                    onClick = { onView(LibraryView.FOLDERS) },
-                    label = { Text(stringResource(R.string.view_folders)) },
-                    leadingIcon = { Icon(Icons.Filled.Folder, contentDescription = null) },
-                )
             }
             Text(
                 stringResource(R.string.sort_title),
@@ -130,62 +118,6 @@ private fun SheetRadio(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** FR-040 (S11) */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CreatePdfSheet(
-    onImageToPdf: () -> Unit,
-    onScan: () -> Unit,
-    onNewDocument: () -> Unit,
-    onMerge: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 40.dp)) {
-            Text(
-                stringResource(R.string.create_pdf_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp),
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onImageToPdf, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Text(
-                        stringResource(R.string.image_to_pdf),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-                OutlinedButton(onClick = onScan, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Text(
-                        stringResource(R.string.scan_document),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-            }
-            OutlinedButton(
-                onClick = onNewDocument,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-            ) {
-                Icon(Icons.Filled.NoteAdd, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(stringResource(R.string.new_document), modifier = Modifier.padding(start = 8.dp))
-            }
-            OutlinedButton(
-                onClick = onMerge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-            ) {
-                Icon(Icons.Filled.MergeType, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(stringResource(R.string.merge_pdfs), modifier = Modifier.padding(start = 8.dp))
-            }
-        }
-    }
-}
-
 /** FR-018 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -198,6 +130,8 @@ fun FileMenuSheet(
     onOrganize: (() -> Unit)? = null,
     onProtect: (() -> Unit)? = null,
     onUnlock: (() -> Unit)? = null,
+    tools: List<Tool> = emptyList(),
+    onTool: (Tool) -> Unit = {},
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(bottom = 32.dp)) {
@@ -207,6 +141,8 @@ fun FileMenuSheet(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             MenuRow(Icons.Filled.Share, stringResource(R.string.action_share), onShare)
+            // The tools that apply to this file: "PDF to Word", "Convert to PDF", "Edit PDF", …
+            tools.forEach { tool -> MenuRow(tool.icon, stringResource(tool.menuLabel), { onTool(tool) }) }
             onOrganize?.let { MenuRow(Icons.Filled.Dashboard, stringResource(R.string.organize_pages), it) }
             onProtect?.let { MenuRow(Icons.Filled.Lock, stringResource(R.string.protect_pdf), it) }
             onUnlock?.let { MenuRow(Icons.Filled.LockOpen, stringResource(R.string.unlock_pdf), it) }

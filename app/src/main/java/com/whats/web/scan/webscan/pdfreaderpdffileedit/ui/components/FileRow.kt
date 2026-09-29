@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,9 +58,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val rowDate = SimpleDateFormat("yy/MM/dd", Locale.getDefault())
+/** "09/29/2026" in the US, "29/09/2026" in India and the UK — the numeric date the phone's locale uses. */
+private val rowDate = SimpleDateFormat(
+    android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "MMddyyyy"),
+    Locale.getDefault(),
+)
 
 fun formatModified(millis: Long): String = rowDate.format(Date(millis))
+
+/** "1 minute ago", "Yesterday", … for the Recent tab. */
+fun formatRelative(millis: Long): String =
+    android.text.format.DateUtils.getRelativeTimeSpanString(
+        millis,
+        System.currentTimeMillis(),
+        android.text.format.DateUtils.MINUTE_IN_MILLIS,
+    ).toString()
 
 /** Provided once by `MainActivity`; null in previews, where rows fall back to the type tile. */
 val LocalThumbnails = staticCompositionLocalOf<Thumbnails?> { null }
@@ -134,13 +145,11 @@ fun DocThumb(file: DocFile, preview: Thumbnails.Preview?, modifier: Modifier = M
     }
 }
 
-/** "26/09/22 • 219.8 KB • 3 pages" — the page count appears once the preview has read it. */
+/** "09/29/2026   113.8 KB", or "2 minutes ago   55.2 KB" on Recent, as One Read lists files. */
 @Composable
-private fun metaLine(file: DocFile, preview: Thumbnails.Preview?): String {
+private fun metaLine(file: DocFile, time: String?): String {
     val context = LocalContext.current
-    val base = "${formatModified(file.modified)} • ${Formatter.formatShortFileSize(context, file.size)}"
-    val pages = preview?.pages ?: return base
-    return "$base • ${pluralStringResource(R.plurals.page_count, pages, pages)}"
+    return "${time ?: formatModified(file.modified)}   ${Formatter.formatShortFileSize(context, file.size)}"
 }
 
 /** FR-013 in Adobe Scan's list style. Also the selection-mode row (FR-019): a check replaces the star. */
@@ -155,6 +164,8 @@ fun FileRow(
     selected: Boolean = false,
     onLongPress: () -> Unit = {},
     showMenu: Boolean = true,
+    /** Replaces the date, e.g. "2 minutes ago" on Recent. */
+    time: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val preview = rememberPreview(item.file)
@@ -164,10 +175,24 @@ fun FileRow(
                 .fillMaxWidth()
                 .background(if (selected) BrandRed.copy(alpha = 0.06f) else Color.Transparent)
                 .combinedClickable(onLongClick = onLongPress, onClick = onOpen)
-                .padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            DocThumb(item.file, preview, Modifier.size(width = 48.dp, height = 62.dp))
+            Box {
+                FileTypeIcon(item.file.type, iconSize = 38.dp)
+                if (preview?.locked == true) {
+                    Icon(
+                        Icons.Filled.Lock,
+                        contentDescription = stringResource(R.string.cd_password_protected),
+                        tint = Color.White,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant, CircleShape)
+                            .padding(2.dp)
+                            .size(12.dp),
+                    )
+                }
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -177,12 +202,12 @@ fun FileRow(
                     text = item.file.name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = metaLine(item.file, preview),
+                    text = metaLine(item.file, time),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp),
@@ -193,7 +218,7 @@ fun FileRow(
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
             thickness = 1.dp,
-            modifier = Modifier.padding(start = 78.dp),
+            modifier = Modifier.padding(start = 68.dp, end = 16.dp),
         )
     }
 }

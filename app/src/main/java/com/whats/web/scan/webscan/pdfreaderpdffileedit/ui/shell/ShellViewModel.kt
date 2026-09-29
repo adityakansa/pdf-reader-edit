@@ -23,8 +23,12 @@ class ShellViewModel @Inject constructor(
     private val index: FileIndex,
     private val incomingFile: IncomingFile,
     val repository: FileRepository,
+    entitlement: com.whats.web.scan.webscan.pdfreaderpdffileedit.billing.Entitlement,
 ) : ViewModel() {
     val canShowAds: StateFlow<Boolean> = adConsent.canShowAds
+
+    /** Signing and stamps are Pro (FR-050); tools started from Home check this before opening. */
+    val isPro: StateFlow<Boolean> = entitlement.isPro
 
     /** FR-021: a file handed to us by another app, to be opened as soon as the shell is up. */
     val incomingFiles = incomingFile.files

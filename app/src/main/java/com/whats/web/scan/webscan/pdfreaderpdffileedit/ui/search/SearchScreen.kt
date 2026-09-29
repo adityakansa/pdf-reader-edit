@@ -62,7 +62,8 @@ fun SearchScreen(
     onBack: () -> Unit,
     onOpenFile: (DocFile) -> Unit,
     canShowAds: Boolean,
-    pdfOnly: Boolean = false,
+    /** Set when picking a file for a tool: only that family is listed and content search is hidden. */
+    onlyType: DocType? = null,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val results by viewModel.results.collectAsStateWithLifecycle()
@@ -71,7 +72,8 @@ fun SearchScreen(
     val focus = androidx.compose.runtime.remember { FocusRequester() }
     val insideFiles by viewModel.insideFiles.collectAsStateWithLifecycle()
     val content by viewModel.content.collectAsStateWithLifecycle()
-    androidx.compose.runtime.LaunchedEffect(pdfOnly) { viewModel.setPdfOnly(pdfOnly) }
+    val pdfOnly = onlyType != null
+    androidx.compose.runtime.LaunchedEffect(onlyType) { viewModel.setOnlyType(onlyType) }
     // The whole point of this screen is typing, so the keyboard opens with it.
     androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 

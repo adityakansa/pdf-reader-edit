@@ -95,6 +95,8 @@ fun PdfReaderScreen(
     onExtractText: (String) -> Unit,
     onSign: (String) -> Unit,
     onPaywall: () -> Unit,
+    /** Home → Annotate: open with the Annotate tools already showing. */
+    startAnnotating: Boolean = false,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -113,7 +115,15 @@ fun PdfReaderScreen(
     }
     LaunchedEffect(state.searching) { if (state.searching) runCatching { searchFocus.requestFocus() } }
 
-    LaunchedEffect(key) { viewModel.load(key) }
+    var annotateStarted by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(key) {
+        viewModel.load(key)
+        // Once only, so turning the phone does not reopen tools the user already closed.
+        if (startAnnotating && !annotateStarted) {
+            annotateStarted = true
+            viewModel.setHighlightMode(true)
+        }
+    }
     LaunchedEffect(state.savedTo) {
         state.savedTo?.let {
             android.widget.Toast

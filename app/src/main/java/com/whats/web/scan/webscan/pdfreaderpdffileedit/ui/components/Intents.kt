@@ -62,6 +62,17 @@ object Intents {
         start(context, intent)
     }
 
+    /** Settings → Feedback / Request a new feature: a mail to the developer, nothing attached. */
+    fun email(context: Context, to: String, subject: String, body: String = "") {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:")
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+        start(context, intent)
+    }
+
     private fun start(context: Context, intent: Intent) {
         try {
             context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

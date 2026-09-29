@@ -2,6 +2,7 @@ package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.ai
 
 import androidx.compose.runtime.Composable
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.search.SearchScreen
 
 /**
@@ -9,11 +10,11 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.search.SearchScreen
  * the library list and its search already do exactly this, so there is no second list to maintain.
  */
 @Composable
-fun AiFilePicker(onBack: () -> Unit, onPick: (DocFile) -> Unit) {
+fun AiFilePicker(onBack: () -> Unit, onPick: (DocFile) -> Unit, type: DocType = DocType.PDF) {
     SearchScreen(
         onBack = onBack,
         onOpenFile = onPick,
         canShowAds = false,
-        pdfOnly = true,
+        onlyType = type,
     )
 }

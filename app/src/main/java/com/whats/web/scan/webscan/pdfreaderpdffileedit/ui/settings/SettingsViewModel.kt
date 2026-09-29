@@ -4,6 +4,12 @@ import android.app.Activity
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.AppPreferences
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ThemeMode
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ads.AdConsent
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.billing.Entitlement
@@ -18,9 +24,20 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val adConsent: AdConsent,
+    private val prefs: AppPreferences,
     entitlement: Entitlement,
 ) : ViewModel() {
     val isPro: StateFlow<Boolean> = entitlement.isPro
+
+    val keepScreenOn: StateFlow<Boolean> =
+        prefs.keepScreenOn.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val themeMode: StateFlow<ThemeMode> =
+        prefs.themeMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
+
+    fun setKeepScreenOn(on: Boolean) = viewModelScope.launch { prefs.setKeepScreenOn(on) }
+
+    fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { prefs.setThemeMode(mode) }
 
     val storeUrl: String = "https://play.google.com/store/apps/details?id=${context.packageName}"
 

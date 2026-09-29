@@ -427,6 +427,54 @@ bullets, curly quotes intact) and rendered in Chromium. Not verified: Compose wi
 Verified: `tools/jvm-check/run.sh` → **OK (65 tests)**. Not verified: the Compose editor on a device (keyboard,
 selection handling), and overwriting a .txt owned by another app on Android 10+ (expected to fall back to a copy).
 
+## Step 12a — One Read–style Home, Recent, lists, Settings, Recycle bin (2026-09-29)
+
+Matched to the new screenshots `docs/screenshots/photo_6187959494923456851_y.jpg` … `…872_y.jpg` (One Read).
+
+- **Three tabs** (Home, Recent, Settings) replace Document/Recent/Create/Favourite/Setting (`ui/shell/BottomBar`).
+- **Home** (`ui/home/Dashboard`), one scrolling grid:
+  - "Set as default reader for instant reading. [Set] ✕". Set opens the system's "Open by default" page. The banner
+    is hidden once closed (`AppPreferences.defaultBannerDismissed`) or when this app already opens PDFs (checked with
+    `resolveActivity` on every resume).
+  - "All Files" cards with live counts: All, PDF, Word, Excel, PPT, TXT, Directories (total size of all documents),
+    Favorites. Each card opens its list screen.
+  - Tool tiles under **Create & Convert**, **Edit & Manage** and **AI tools**. A tile is a tinted square with the tool's glyph and
+    an output badge (W / PDF / JPG). The tools are defined once in `ui/home/Catalogue` (`Tool`, `ToolSection`,
+    `LibraryCategory`). Tools whose screens come in 12b/12c stay hidden until then (`readyTools`).
+  - When file access is missing, a card explains it and has the grant button.
+- **List screens** (`ui/home/FileListScreen`, route `FileList(category)`): "PDF files", "Word files", "All files",
+  "Directories" (the former Folders view), "Favorites". The bar has back, title, select, sort and search. "Merge PDF"
+  opens the PDF list already in selection mode.
+- **Recent** has type tabs (All, PDF, Word, Excel, PPT, TXT) with a red underline, and "2 minutes ago" times.
+- **Rows** now look like One Read's: a drawn document icon in the type colour (`FileTypeIcon`: PDF/W/X/P/T with a
+  folded corner, and a lock badge for protected PDFs), then the name, then the date in the phone's numeric format
+  (09/29/2026) and the size. The grid view keeps page previews.
+- Shared row actions (`ui/home/FileActions`): the ⋮ sheet, info, merge, protect/unlock, delete. The ⋮ sheet now also
+  lists the tools that fit the file type (Edit PDF, Convert to Word, …) as they become ready.
+- **Recycle bin** (`data/files/RecycleBin`, `ui/home/RecycleBinScreen`): delete now copies the file into app storage
+  before removing it. If the removal fails, the copy is dropped, so a file is never in both places or in neither.
+  Restore puts the file back at its original path, or into Documents/PDF Reader. Entries older than 30 days are
+  purged. The screen has an empty state ("The recycle bin is empty"), days left per file, Restore, Delete for good,
+  and Empty.
+- **Settings** (`ui/settings/SettingsScreen`), as One Read lays it out:
+  - an orange "Remove ads — Unlock all premium features" card
+  - General: File Manager, Recycle bin, **Keep screen on** (new, app-wide), Default reader, Share App
+  - Display: **App theme** (System/Light/Dark, new, applied in `MainActivity`), Language
+  - Help: FAQ (six answers that are true of this app), Request a new feature and Feedback (email to
+    `SUPPORT_EMAIL`), Rate, Terms of use (`TERMS_URL`), Privacy Policy, privacy options, licences
+  - the version at the bottom
+  - the thumbs-up in the bar opens the rating flow
+- Home → Annotate opens the reader with the Annotate tools showing (`Reader(key, annotate = true)`). Add text and
+  Fill & Sign open the placement screen; free users see the paywall, as in the reader. Split PDF and Manage pages
+  open Organize pages. Any tool that needs a file first shows the picker, limited to the tool's file type
+  (`SearchScreen(onlyType)`).
+- Icons: no UI/UX or icon skill is installed on the account (`ListPlugins` / `ListSkills` returned none), so the icons
+  are Material Symbols and drawn shapes. Every icon import was checked against the real
+  `material-icons-extended` 1.7.3 jar from Maven Central (`scratchpad/iconcheck.py`): all exist.
+
+Not verified: no Android build can run here (Google's Maven is blocked), so the new Compose code has not been
+compiled. The JVM harness covers only the Android-free code, which this step did not change.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

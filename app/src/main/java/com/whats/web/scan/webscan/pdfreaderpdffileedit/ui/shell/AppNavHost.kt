@@ -24,7 +24,11 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.ai.AiFilePicker
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.ai.AiResultScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.ai.AiRunScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.ai.SelectPageScreen
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.FileListScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.HomeScreen
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.LibraryCategory
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.RecycleBinScreen
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.Tool
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.StorageAccessScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.imagetopdf.ImageToPdfScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.scan.CameraScreen
@@ -54,6 +58,32 @@ fun AppNavHost(
         navController.navigate(route)
     }
 
+    /** Home → a tool tile. Tools that work on a file ask for one first. */
+    fun startTool(tool: Tool) {
+        when (tool) {
+            Tool.IMAGE_TO_PDF -> navController.navigate(Routes.ImageToPdf)
+            Tool.SCAN_TO_PDF -> navController.navigate(Routes.Scan)
+            Tool.CREATE_PDF -> navController.navigate(Routes.Editor())
+            Tool.MERGE_PDF -> navController.navigate(Routes.FileList(LibraryCategory.PDF.name, merge = true))
+            Tool.RECYCLE_BIN -> navController.navigate(Routes.RecycleBin)
+            Tool.AI_TRANSLATE -> navController.navigate(Routes.AiFilePicker(AiMode.TRANSLATE.name))
+            Tool.AI_SUMMARY -> navController.navigate(Routes.AiFilePicker(AiMode.SUMMARY.name))
+            Tool.AI_EXTRACT -> navController.navigate(Routes.AiFilePicker(AiMode.EXTRACT_TEXT.name))
+            else -> navController.navigate(Routes.ToolPicker(tool.name))
+        }
+    }
+
+    /** A tool on a chosen file, from the picker or a file's ⋮ menu. */
+    fun runTool(tool: Tool, file: DocFile) {
+        when (tool) {
+            Tool.ANNOTATE -> navController.navigate(Routes.Reader(file.key, annotate = true))
+            Tool.ADD_TEXT, Tool.FILL_SIGN ->
+                navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(file.key) else Routes.Paywall)
+            Tool.SPLIT_PDF, Tool.MANAGE_PAGES -> navController.navigate(Routes.OrganizePages(file.key))
+            else -> startTool(tool)
+        }
+    }
+
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.incomingFiles.collect { file -> openFile(file) }
     }
@@ -76,15 +106,41 @@ fun AppNavHost(
                     onOpenFile = ::openFile,
                     onSearch = { navController.navigate(Routes.Search) },
                     onPaywall = { navController.navigate(Routes.Paywall) },
-                    onImageToPdf = { navController.navigate(Routes.ImageToPdf) },
-                    onScan = { navController.navigate(Routes.Scan) },
-                    onAi = { mode -> navController.navigate(Routes.AiFilePicker(mode.name)) },
+                    onCategory = { category -> navController.navigate(Routes.FileList(category.name)) },
+                    onTool = ::startTool,
+                    onFileTool = ::runTool,
                     onStorageAccess = { navController.navigate(Routes.StorageAccess) },
                     onNotices = { navController.navigate(Routes.Notices) },
-                    onOrganizePages = { file -> navController.navigate(Routes.OrganizePages(file.key)) },
-                    onNewDocument = { navController.navigate(Routes.Editor()) },
                     canShowAds = canShowAds,
                 )
+            }
+            composable<Routes.FileList> { entry ->
+                val route = entry.toRoute<Routes.FileList>()
+                FileListScreen(
+                    category = LibraryCategory.valueOf(route.category),
+                    mergePicking = route.merge,
+                    onBack = navController::popBackStack,
+                    onOpenFile = ::openFile,
+                    onSearch = { navController.navigate(Routes.Search) },
+                    onStorageAccess = { navController.navigate(Routes.StorageAccess) },
+                    onFileTool = ::runTool,
+                    canShowAds = canShowAds,
+                )
+            }
+            composable<Routes.ToolPicker> { entry ->
+                val tool = Tool.valueOf(entry.toRoute<Routes.ToolPicker>().tool)
+                AiFilePicker(
+                    onBack = navController::popBackStack,
+                    onPick = { file ->
+                        // The picker leaves the stack, so Back from the tool returns to Home.
+                        navController.popBackStack()
+                        runTool(tool, file)
+                    },
+                    type = tool.input ?: DocType.PDF,
+                )
+            }
+            composable<Routes.RecycleBin> {
+                RecycleBinScreen(onBack = navController::popBackStack)
             }
             composable<Routes.Search> {
                 SearchScreen(
@@ -179,8 +235,10 @@ fun AppNavHost(
                 )
             }
             composable<Routes.Reader> { entry ->
+                val route = entry.toRoute<Routes.Reader>()
                 PdfReaderScreen(
-                    key = entry.toRoute<Routes.Reader>().key,
+                    key = route.key,
+                    startAnnotating = route.annotate,
                     onBack = navController::popBackStack,
                     onAiTranslate = { key ->
                         navController.navigate(Routes.SelectPage(key, AiMode.TRANSLATE.name))

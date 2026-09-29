@@ -41,3 +41,16 @@ val DarkSurface = Color(0xFF1E1E1E)
 val DarkTextPrimary = Color(0xFFECECEC)
 val DarkTextSecondary = Color(0xFF9A9A9A)
 val DarkDivider = Color(0xFF2A2A2A)
+
+// Home tool tiles and category cards (Step 12a).
+val ToolBlue = Color(0xFF2F80ED)
+val ToolPurple = Color(0xFF7B61FF)
+
+// The call-to-action gradient on primary buttons ("Convert to Word", "Share", "Try now").
+val CtaOrange = Color(0xFFFF7A3D)
+val CtaRed = Color(0xFFE8412C)
+
+// The dark premium screen.
+val PremiumDark = Color(0xFF17110E)
+val PremiumCard = Color(0xFF2A211C)
+val PremiumAccent = Color(0xFFFF6B4A)

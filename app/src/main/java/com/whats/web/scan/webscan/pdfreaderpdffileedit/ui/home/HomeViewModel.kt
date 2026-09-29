@@ -1,6 +1,12 @@
 package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home
 
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.RecycleBin
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.viewModelScope
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.billing.Entitlement
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
@@ -30,7 +36,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeUiState(
-    val tab: HomeTab = HomeTab.DOCUMENT,
+    val tab: HomeTab = HomeTab.HOME,
+    /** Set on a list screen (Home → a category card); null on the Home tabs. */
+    val category: LibraryCategory? = null,
     val filter: DocType? = null,
     val files: List<LibraryFile> = emptyList(),
     val selected: Set<String> = emptySet(),
@@ -41,9 +49,15 @@ data class HomeUiState(
     /** The phone is still being searched for documents. */
     val scanning: Boolean = false,
     val view: LibraryView = LibraryView.LIST,
-    /** In the Folders view: the folders, or null while one is open (then [files] are its files). */
+    /** In the Directories list: the folders, or null while one is open (then [files] are its files). */
     val folders: List<FolderItem>? = null,
     val openFolder: String? = null,
+    /** File count per Home card. */
+    val counts: Map<LibraryCategory, Int> = emptyMap(),
+    /** Bytes of every document together, shown on the Directories card. */
+    val totalSize: Long = 0L,
+    /** Home's "Set as default reader" banner: this app is not the PDF default and the banner was not closed. */
+    val showDefaultBanner: Boolean = false,
 ) {
     val grid: Boolean get() = view == LibraryView.GRID
 }
@@ -52,6 +66,7 @@ data class FolderItem(val id: String, val name: String, val path: String, val co
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: FileRepository,
     private val index: FileIndex,
     private val storageAccess: StorageAccess,
@@ -59,15 +74,24 @@ class HomeViewModel @Inject constructor(
     private val prefs: AppPreferences,
     private val tools: PdfToolRunner,
     private val incoming: IncomingFile,
+    private val recycleBin: RecycleBin,
     entitlement: Entitlement,
 ) : ViewModel() {
-    private val tab = MutableStateFlow(HomeTab.DOCUMENT)
+    private val tab = MutableStateFlow(HomeTab.HOME)
+    private val category = MutableStateFlow<LibraryCategory?>(null)
     private val filter = MutableStateFlow<DocType?>(null)
     private val selection = MutableStateFlow(emptySet<String>())
     private val selectionMode = MutableStateFlow(false)
     private val openFolder = MutableStateFlow<String?>(null)
+    private val isDefaultReader = MutableStateFlow(true)
 
-    private data class ViewArgs(val tab: HomeTab, val filter: DocType?, val view: LibraryView, val folder: String?)
+    private data class ViewArgs(
+        val tab: HomeTab,
+        val category: LibraryCategory?,
+        val filter: DocType?,
+        val view: LibraryView,
+        val folder: String?,
+    )
 
     private fun folderItems(files: List<LibraryFile>): List<FolderItem> =
         files.groupBy { FolderNames.parentOf(it.file.key) }
@@ -83,49 +107,82 @@ class HomeViewModel @Inject constructor(
         clearSelection()
     }
 
+    private val banner = combine(prefs.defaultBannerDismissed, isDefaultReader) { dismissed, isDefault ->
+        !dismissed && !isDefault
+    }
+
     val state: StateFlow<HomeUiState> = combine(
         combine(repository.all, repository.recents, repository.favourites) { all, recents, favourites ->
             Triple(all, recents, favourites)
         },
-        combine(tab, filter, prefs.libraryView, openFolder) { t, f, v, o -> ViewArgs(t, f, v, o) },
+        combine(tab, category, filter, prefs.libraryView, openFolder) { t, c, f, v, o -> ViewArgs(t, c, f, v, o) },
         combine(selection, selectionMode) { s, m -> s to m },
-        entitlement.isPro,
+        combine(entitlement.isPro, banner) { pro, showBanner -> pro to showBanner },
         combine(storageAccess.state, index.scanning) { access, scanning -> access to scanning },
-    ) { lists, tabFilter, sel, isPro, accessScanning ->
+    ) { lists, args, sel, proBanner, accessScanning ->
         val (access, scanning) = accessScanning
         val (all, recents, favourites) = lists
-        val (currentTab, currentFilter, view, folder) = tabFilter
-        val source = when (currentTab) {
-            HomeTab.RECENT -> recents
-            HomeTab.FAVOURITE -> favourites
+        val source = when {
+            args.category == LibraryCategory.FAVOURITES -> favourites
+            args.category == null && args.tab == HomeTab.RECENT -> recents
             else -> all
         }
+        // A type card fixes the family; Recent's tabs and the All list's chips pick one.
+        val type = args.category?.type ?: args.filter
+        val ofType = source.filter { type == null || it.file.type == type }
+        val showFolders = args.category == LibraryCategory.FOLDERS
         HomeUiState(
-            tab = currentTab,
-            filter = currentFilter,
-            files = source
-                .filter { currentFilter == null || it.file.type == currentFilter }
-                .filter { folder == null || FolderNames.parentOf(it.file.key) == folder },
+            tab = args.tab,
+            category = args.category,
+            filter = type,
+            files = ofType.filter { args.folder == null || FolderNames.parentOf(it.file.key) == args.folder },
             selected = sel.first,
             selectionMode = sel.second,
-            isPro = isPro,
+            isPro = proBanner.first,
             hasStorageAccess = access.hasFullAccess || access.grantedTrees.isNotEmpty() ||
                 access.grantedFiles.isNotEmpty(),
             scanning = scanning,
-            view = view,
-            openFolder = folder,
-            folders = if (view == LibraryView.FOLDERS && folder == null) {
-                folderItems(source.filter { currentFilter == null || it.file.type == currentFilter })
-            } else {
-                null
+            // The Folders view became the Directories card, so the stored view only chooses list or grid.
+            view = if (args.view == LibraryView.GRID) LibraryView.GRID else LibraryView.LIST,
+            openFolder = args.folder,
+            folders = if (showFolders && args.folder == null) folderItems(ofType) else null,
+            counts = LibraryCategory.entries.associateWith { c ->
+                when (c) {
+                    LibraryCategory.ALL -> all.size
+                    LibraryCategory.FAVOURITES -> favourites.size
+                    LibraryCategory.FOLDERS -> all.mapNotNull { FolderNames.parentOf(it.file.key) }.distinct().size
+                    else -> all.count { it.file.type == c.type }
+                }
             },
+            totalSize = all.sumOf { it.file.size },
+            showDefaultBanner = proBanner.second,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun selectTab(value: HomeTab) {
         tab.value = value
+        filter.value = null
         openFolder.value = null
         clearSelection()
+    }
+
+    /** Makes this instance the list screen for [value] (Home → a card). */
+    fun showCategory(value: LibraryCategory) {
+        if (category.value == value) return
+        category.value = value
+        filter.value = null
+        openFolder.value = null
+    }
+
+    fun dismissDefaultBanner() = viewModelScope.launch { prefs.dismissDefaultBanner() }
+
+    /** True when a PDF tapped anywhere already opens here, so the banner has nothing to offer. */
+    private fun checkDefaultReader() {
+        val probe = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse("content://probe/file.pdf"), "application/pdf")
+        val resolved = runCatching {
+            context.packageManager.resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY)
+        }.getOrNull()
+        isDefaultReader.value = resolved?.activityInfo?.packageName == context.packageName
     }
 
     fun setFilter(value: DocType?) {
@@ -168,8 +225,9 @@ class HomeViewModel @Inject constructor(
     fun selectedFiles(): List<DocFile> =
         state.value.files.filter { it.file.key in selection.value }.map { it.file }
 
+    /** Moves [files] to the recycle bin, where they can be restored for 30 days. */
     fun delete(files: List<DocFile>, onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        val ok = files.map { repository.delete(it) }.all { it }
+        val ok = files.map { recycleBin.moveToBin(it) }.all { it }
         clearSelection()
         onResult(ok)
     }
@@ -177,6 +235,7 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         storageAccess.refresh()
         index.refresh()
+        checkDefaultReader()
     }
 
     fun shareableUri(file: DocFile) = repository.shareableUri(file)
@@ -242,8 +301,6 @@ class HomeViewModel @Inject constructor(
 
     /** Create sheet → "Merge PDFs": show only PDFs and start picking. */
     fun startMergePicking() {
-        tab.value = HomeTab.DOCUMENT
-        filter.value = DocType.PDF
         selection.value = emptySet()
         selectionMode.value = true
     }

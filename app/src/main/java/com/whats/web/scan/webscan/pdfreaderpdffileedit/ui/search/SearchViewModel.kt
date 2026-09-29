@@ -49,15 +49,15 @@ class SearchViewModel @Inject constructor(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    private val pdfOnly = MutableStateFlow(false)
+    private val onlyType = MutableStateFlow<DocType?>(null)
 
     val isPro: StateFlow<Boolean> = entitlement.isPro
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val results: StateFlow<List<LibraryFile>> =
-        combine(repository.all, _query.debounce(150), pdfOnly) { files, q, onlyPdf ->
+        combine(repository.all, _query.debounce(150), onlyType) { files, q, type ->
             files
-                .filter { !onlyPdf || it.file.type == DocType.PDF }
+                .filter { type == null || it.file.type == type }
                 .filter { q.isBlank() || it.file.name.contains(q, ignoreCase = true) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -99,8 +99,9 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun setPdfOnly(value: Boolean) {
-        pdfOnly.value = value
+    /** Picking a file for a tool: only that family is listed. */
+    fun setOnlyType(value: DocType?) {
+        onlyType.value = value
     }
 
     fun toggleFavourite(key: String) = viewModelScope.launch { repository.toggleFavourite(key) }
