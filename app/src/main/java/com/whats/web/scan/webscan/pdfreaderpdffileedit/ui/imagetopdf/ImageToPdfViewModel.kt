@@ -41,13 +41,11 @@ class ImageToPdfViewModel @Inject constructor(
         _state.value = _state.value.copy(images = _state.value.images - uri)
     }
 
-    /** Reordering on a phone grid: nudge a page one place later, tap again to keep going. */
-    fun moveLater(uri: Uri) {
+    /** FR-041: drag-and-drop reorder; called each time the dragged image crosses another. */
+    fun move(from: Int, to: Int) {
         val list = _state.value.images.toMutableList()
-        val index = list.indexOf(uri)
-        if (index < 0 || index == list.lastIndex) return
-        list[index] = list[index + 1]
-        list[index + 1] = uri
+        if (from !in list.indices || to !in list.indices || from == to) return
+        list.add(to, list.removeAt(from))
         _state.value = _state.value.copy(images = list)
     }
 

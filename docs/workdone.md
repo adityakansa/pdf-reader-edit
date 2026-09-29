@@ -113,6 +113,24 @@ background) and checked by eye. Not verified: no Android build, so launcher mask
 seen. FR-006 also says the icon must match the Play listing icon; a 512 px store icon still has to be exported
 from these vectors when the listing is made.
 
+## Step 8 — drag-to-reorder, apply-edges reveal, cleanup (2026-09-29)
+
+FRs touched: FR-041, FR-043, FR-050.
+
+- New `ui/components/DragReorder.kt`: one long-press-then-drag state for a `LazyVerticalGrid` or a `LazyRow`.
+  The container's `layoutInfo` is the hit test, the list is reordered live through `onMove` each time the finger
+  crosses another item, the dragged item is lifted (scale, shadow, z-order) and stays under the finger, and dragging
+  near an edge auto-scrolls. It replaces the "nudge one place later" arrow buttons, the known gap from Step 3.
+- Image to PDF (FR-041): the grid uses it (`ImageToPdfViewModel.move(from, to)`), and each tile shows its page number.
+- Scan review (FR-043): the page strip uses it (`PageReviewViewModel.move`), and the selected page stays selected
+  while it moves. Leaving the crop editor crossfades (450 ms) into the warped page as a simple "Apply edges" reveal.
+- `Routes.Signatures` removed: no screen used it. FR-050's signature list, pad, photo import and delete live
+  on the place-on-PDF screen.
+
+Not verified: no Android build or device run (same network block as Step 5). Drag hit-testing uses
+`visibleItemsInfo` offsets shifted by `viewportStartOffset`. If the grid's horizontal content padding is not in the
+item x offsets, the hit area is off by 12 dp. It needs checking by hand on a device.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

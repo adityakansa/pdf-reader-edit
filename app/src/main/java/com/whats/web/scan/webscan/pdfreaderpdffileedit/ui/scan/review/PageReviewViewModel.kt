@@ -69,10 +69,18 @@ class PageReviewViewModel @Inject constructor(
         session.replace(it.copy(rotationDegrees = (it.rotationDegrees + 90) % 360))
     }
 
-    fun moveLater() {
-        val index = _state.value.current
-        session.move(index, index + 1)
-        _state.value = _state.value.copy(current = (index + 1).coerceAtMost(_state.value.pages.lastIndex))
+    /** FR-043: drag-and-drop reorder in the page strip; the selected page stays selected as it moves. */
+    fun move(from: Int, to: Int) {
+        if (from == to) return
+        session.move(from, to)
+        val current = _state.value.current
+        val next = when {
+            current == from -> to
+            current in (from + 1)..to -> current - 1
+            current in to until from -> current + 1
+            else -> current
+        }
+        _state.value = _state.value.copy(current = next)
     }
 
     fun delete() {

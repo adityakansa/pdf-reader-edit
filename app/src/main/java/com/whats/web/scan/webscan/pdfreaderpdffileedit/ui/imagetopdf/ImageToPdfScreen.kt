@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +47,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PageMargin
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PdfPageSize
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.dragReorder
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.reorderItem
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.rememberGridReorderState
 
 /** FR-041. Photo Picker, so no media permission is ever requested. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,18 +129,24 @@ fun ImageToPdfScreen(
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
                 return@Box
             }
+            val gridState = rememberLazyGridState()
+            val reorder = rememberGridReorderState(gridState, viewModel::move)
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(110.dp),
-                modifier = Modifier.fillMaxSize(),
+                state = gridState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .dragReorder(reorder),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(state.images, key = { it.toString() }) { uri ->
+                itemsIndexed(state.images, key = { _, uri -> uri.toString() }) { index, uri ->
                     ImageTile(
                         uri = uri,
+                        number = index + 1,
                         onRemove = { viewModel.remove(uri) },
-                        onMoveLater = { viewModel.moveLater(uri) },
+                        modifier = Modifier.reorderItem(reorder, index),
                     )
                 }
             }
@@ -183,10 +192,11 @@ private fun rememberThumbnail(uri: Uri): androidx.compose.ui.graphics.ImageBitma
     return bitmap
 }
 
+/** One picked photo: its page number, and a remove button. Long-press anywhere on it to drag. */
 @Composable
-private fun ImageTile(uri: Uri, onRemove: () -> Unit, onMoveLater: () -> Unit) {
+private fun ImageTile(uri: Uri, number: Int, onRemove: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        Modifier
+        modifier
             .aspectRatio(0.75f)
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
@@ -211,15 +221,15 @@ private fun ImageTile(uri: Uri, onRemove: () -> Unit, onMoveLater: () -> Unit) {
                     .background(MaterialTheme.colorScheme.surface, androidx.compose.foundation.shape.CircleShape),
             )
         }
-        IconButton(
-            onClick = onMoveLater,
-            modifier = Modifier.align(Alignment.BottomEnd),
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        Text(
+            number.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(6.dp)
+                .background(MaterialTheme.colorScheme.surface, androidx.compose.foundation.shape.CircleShape)
+                .padding(horizontal = 8.dp, vertical = 2.dp),
+        )
     }
 }

@@ -29,9 +29,6 @@ object Routes {
     data object ScanReview
 
     @Serializable
-    data object Signatures
-
-    @Serializable
     data class PlaceOnPdf(val key: String)
 
     @Serializable

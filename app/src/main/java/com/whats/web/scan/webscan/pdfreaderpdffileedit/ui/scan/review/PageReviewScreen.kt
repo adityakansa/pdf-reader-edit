@@ -2,6 +2,8 @@ package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.scan.review
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,11 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.RotateRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +63,9 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.NormalizedP
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.PageFilter
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.imaging.model.Quad
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.scan.ScanPage
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.dragReorder
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.rememberRowReorderState
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.reorderItem
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 
 /** FR-043 / FR-044. Crop, rotate, filter, reorder and delete the captured pages, then write the PDF. */
@@ -119,9 +124,6 @@ fun PageReviewScreen(
                     IconButton(onClick = viewModel::rotate) {
                         Icon(Icons.Filled.RotateRight, contentDescription = stringResource(R.string.action_rotate))
                     }
-                    IconButton(onClick = viewModel::moveLater) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-                    }
                     IconButton(onClick = viewModel::delete) {
                         Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
                     }
@@ -161,26 +163,40 @@ fun PageReviewScreen(
                 when {
                     state.saving -> CircularProgressIndicator()
                     page == null -> Text(stringResource(R.string.empty_documents))
-                    cropping -> CropEditor(
-                        page = page,
-                        load = { viewModel.original(it, PREVIEW_MAX_SIDE) },
-                        onCrop = viewModel::setCrop,
-                    )
-
-                    else -> PagePreview(page) { viewModel.preview(it, PREVIEW_MAX_SIDE) }
+                    // FR-043 "Apply edges": leaving the crop editor fades into the warped page.
+                    else -> Crossfade(
+                        targetState = cropping,
+                        animationSpec = tween(APPLY_EDGES_MILLIS),
+                        label = "apply-edges",
+                    ) { editing ->
+                        if (editing) {
+                            CropEditor(
+                                page = page,
+                                load = { viewModel.original(it, PREVIEW_MAX_SIDE) },
+                                onCrop = viewModel::setCrop,
+                            )
+                        } else {
+                            PagePreview(page) { viewModel.preview(it, PREVIEW_MAX_SIDE) }
+                        }
+                    }
                 }
             }
+            val stripState = rememberLazyListState()
+            val reorder = rememberRowReorderState(stripState, viewModel::move)
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(96.dp)
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .dragReorder(reorder),
+                state = stripState,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
             ) {
                 itemsIndexed(state.pages, key = { _, item -> item.id }) { index, item ->
                     Box(
                         Modifier
+                            .reorderItem(reorder, index)
                             .size(60.dp, 80.dp)
                             .border(
                                 width = if (index == state.current) 2.dp else 1.dp,
@@ -291,6 +307,7 @@ private fun CropEditor(page: ScanPage, load: suspend (ScanPage) -> Bitmap?, onCr
 
 private const val PREVIEW_MAX_SIDE = 1_600
 private const val THUMB_MAX_SIDE = 240
+private const val APPLY_EDGES_MILLIS = 450
 
 /** How near a finger has to land, as a fraction of the image, to grab a corner. */
 private const val CORNER_GRAB = 0.12f
