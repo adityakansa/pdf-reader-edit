@@ -30,6 +30,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.LibraryCategory
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.RecycleBinScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.Tool
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.AfterSave
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.convert.ConvertScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.EditorTool
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.pdfeditor.PdfEditorScreen
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.home.StorageAccessScreen
@@ -85,6 +86,8 @@ fun AppNavHost(
             Tool.FILL_SIGN ->
                 navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(file.key) else Routes.Paywall)
             Tool.SPLIT_PDF, Tool.MANAGE_PAGES -> navController.navigate(Routes.OrganizePages(file.key))
+            Tool.PDF_TO_WORD, Tool.PDF_TO_IMAGE, Tool.WORD_TO_PDF, Tool.PPT_TO_PDF, Tool.EXCEL_TO_PDF, Tool.COMPRESS_PDF ->
+                navController.navigate(Routes.Convert(file.key, tool.name))
             else -> startTool(tool)
         }
     }
@@ -174,6 +177,18 @@ fun AppNavHost(
                     onFillSign = { key ->
                         navController.popBackStack()
                         navController.navigate(if (viewModel.isPro.value) Routes.PlaceOnPdf(key) else Routes.Paywall)
+                    },
+                )
+            }
+            composable<Routes.Convert> { entry ->
+                val route = entry.toRoute<Routes.Convert>()
+                ConvertScreen(
+                    key = route.key,
+                    tool = Tool.valueOf(route.tool),
+                    onBack = navController::popBackStack,
+                    onOpen = { uri, mime ->
+                        navController.popBackStack()
+                        viewModel.open(uri, mime)
                     },
                 )
             }
@@ -278,6 +293,7 @@ fun AppNavHost(
                     key = route.key,
                     startAnnotating = route.annotate,
                     onEdit = { key -> navController.navigate(Routes.PdfEditor(key)) },
+                    onConvertToWord = { key -> navController.navigate(Routes.Convert(key, Tool.PDF_TO_WORD.name)) },
                     onBack = navController::popBackStack,
                     onAiTranslate = { key ->
                         navController.navigate(Routes.SelectPage(key, AiMode.TRANSLATE.name))
@@ -297,6 +313,7 @@ fun AppNavHost(
                     key = entry.toRoute<Routes.OfficeReader>().key,
                     onBack = navController::popBackStack,
                     onEdit = { key -> navController.navigate(Routes.Editor(key)) },
+                    onConvertToPdf = { file -> runTool(Tool.WORD_TO_PDF, file) },
                 )
             }
         }

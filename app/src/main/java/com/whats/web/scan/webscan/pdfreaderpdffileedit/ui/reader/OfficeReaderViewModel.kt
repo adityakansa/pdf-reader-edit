@@ -12,7 +12,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OoxmlZip
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.PptxToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.TextToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.XlsxToHtml
-import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.legacy.LegacyToHtml
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OfficeHtmlLoader
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -51,49 +51,14 @@ class OfficeReaderViewModel @Inject constructor(
         _state.value = OfficeUiState(file = file, loading = true)
         viewModelScope.launch {
             repository.markOpened(key)
-            if (file.isLegacyOffice) {
-                // Office 97–2003: read in-app; only a file we cannot read goes to "open with another app".
-                val legacyHtml = withContext(Dispatchers.IO) {
-                    runCatching {
-                        val bytes = context.contentResolver.openInputStream(file.uri)?.use { it.readBytes() }
-                            ?: return@runCatching null
-                        LegacyToHtml.convert(file.ext, bytes, rowCapNotice)
-                    }.getOrNull()
-                }
-                _state.value = if (legacyHtml != null) {
-                    _state.value.copy(loading = false, html = legacyHtml, baseUrl = null)
-                } else {
-                    _state.value.copy(loading = false, legacy = true)
-                }
-                return@launch
-            }
             val mediaDir = File(context.cacheDir, "office-media")
             val html = withContext(Dispatchers.IO) {
-                runCatching {
-                    // CSV and TXT are text, not zip packages: they never reach the OOXML reader.
-                    when (file.ext.lowercase()) {
-                        "csv", "txt" -> {
-                            val bytes = context.contentResolver.openInputStream(file.uri)
-                                ?.use { it.readBytes() } ?: return@runCatching null
-                            val text = TextToHtml.decode(bytes)
-                            return@runCatching if (file.ext.equals("csv", ignoreCase = true)) {
-                                TextToHtml.csv(text, rowCapNotice)
-                            } else {
-                                TextToHtml.plain(text, textCapNotice)
-                            }
-                        }
-                    }
-                    val parts = context.contentResolver.openInputStream(file.uri)
-                        ?.use(OoxmlZip::read)
-                        ?: return@runCatching null
-                    val media = OoxmlZip.extractMedia(parts, mediaDir)
-                    when (file.type) {
-                        DocType.WORD -> DocxToHtml.convert(parts, media)
-                        DocType.EXCEL -> XlsxToHtml.convert(parts, rowCapNotice)
-                        DocType.PPT -> PptxToHtml.convert(parts, media)
-                        DocType.PDF, DocType.TEXT -> null
-                    }
-                }.getOrNull()
+                OfficeHtmlLoader.load(context, file, mediaDir, rowCapNotice, textCapNotice)
+            }
+            // FR-036: a legacy file none of the readers understood goes to "open with another app".
+            if (html == null && file.isLegacyOffice) {
+                _state.value = _state.value.copy(loading = false, legacy = true)
+                return@launch
             }
             _state.value = _state.value.copy(
                 loading = false,

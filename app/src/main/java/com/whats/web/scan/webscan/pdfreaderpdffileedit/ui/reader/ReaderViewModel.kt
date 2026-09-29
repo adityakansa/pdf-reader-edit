@@ -58,6 +58,8 @@ data class ReaderUiState(
     /** Bookmarked pages of this PDF, zero-based. */
     val bookmarks: Set<Int> = emptySet(),
     val savedTo: String? = null,
+    /** The first page has no text layer: a scan or photo, so "Convert to Word" (with OCR) is offered. */
+    val scanned: Boolean = false,
 )
 
 @HiltViewModel
@@ -111,6 +113,8 @@ class ReaderViewModel @Inject constructor(
                         jumpTo = resume,
                     )
                     buildTextIndex(file)
+                    val noText = runCatching { wordsOn(0).isEmpty() }.getOrDefault(false)
+                    _state.value = _state.value.copy(scanned = noText)
                 }
 
                 PdfAccess.OpenResult.PasswordRequired ->

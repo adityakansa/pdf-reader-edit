@@ -57,6 +57,7 @@ fun OfficeReaderScreen(
     key: String,
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
+    onConvertToPdf: (com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile) -> Unit = {},
     viewModel: OfficeReaderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -166,6 +167,14 @@ fun OfficeReaderScreen(
                 if (state.html != null && state.file?.ext.equals("txt", ignoreCase = true) && state.file?.isSample != true) {
                     IconButton(onClick = { onEdit(key) }) {
                         Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.action_edit))
+                    }
+                }
+                if (state.html != null) {
+                    IconButton(onClick = { state.file?.let(onConvertToPdf) }) {
+                        Icon(
+                            androidx.compose.material.icons.Icons.Filled.PictureAsPdf,
+                            contentDescription = stringResource(R.string.menu_convert_pdf),
+                        )
                     }
                 }
                 if (state.html != null) {

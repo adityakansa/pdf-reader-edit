@@ -34,6 +34,28 @@ object Printing {
         }.onFailure { unavailable(context) }
     }
 
+    /** Keeps the page alive while the print service reads it; replaced by the next print. */
+    private var pending: WebView? = null
+
+    /** Loads [html] off screen, then opens the system print screen for it ("Save as PDF" is one option). */
+    fun printHtml(context: Context, html: String, baseUrl: String?, jobName: String) {
+        val view = WebView(context)
+        pending?.destroy()
+        pending = view
+        view.settings.javaScriptEnabled = false
+        view.settings.allowFileAccess = true
+        view.webViewClient = object : android.webkit.WebViewClient() {
+            private var started = false
+
+            override fun onPageFinished(webView: WebView?, url: String?) {
+                if (started) return
+                started = true
+                printWebView(context, view, jobName)
+            }
+        }
+        view.loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
+    }
+
     private fun unavailable(context: Context) {
         Toast.makeText(context, R.string.print_unavailable, Toast.LENGTH_LONG).show()
     }

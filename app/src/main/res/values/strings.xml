@@ -460,4 +460,36 @@
     <string name="editor_try_now">Try now</string>
     <string name="annotate_eraser">Eraser</string>
     <string name="editor_intro_sample">2. Scope of Work</string>
+
+    <!-- Step 12c: conversions -->
+    <string name="converting">Converting…</string>
+    <string name="converting_note">Everything happens on your phone. Your file is not uploaded.</string>
+    <string name="converted_successfully">Converted successfully!</string>
+    <string name="view_locally">View locally</string>
+    <string name="saved_location">Saved in %1$s. Open it in your Files app, or right here from Home.</string>
+    <string name="action_rename">Rename</string>
+    <string name="rename_failed">Could not rename this file.</string>
+    <string name="action_convert">Convert</string>
+    <string name="action_compress">Compress</string>
+    <string name="action_retry">Try again</string>
+    <string name="open_print_screen">Open print screen</string>
+    <string name="convert_error_password">This PDF is password protected. Remove the password first (⋮ → Remove password), then try again.</string>
+    <string name="convert_error_not_smaller">This PDF is already as small as it gets. No pictures in it could be made smaller, so no copy was made.</string>
+    <string name="convert_error_print">This phone cannot write the PDF directly. Open the print screen and choose “Save as PDF”.</string>
+    <string name="convert_error_failed">Something went wrong with this file. Please try again.</string>
+    <string name="compress_result">%1$s → %2$s (%3$d%% smaller)</string>
+    <string name="compress_low">Low compression</string>
+    <string name="compress_low_body">Best quality, a little smaller</string>
+    <string name="compress_medium">Recommended</string>
+    <string name="compress_medium_body">Good quality, much smaller</string>
+    <string name="compress_high">High compression</string>
+    <string name="compress_high_body">Smallest file, pictures look softer</string>
+    <string name="rating_feature_question">Are you satisfied with our “%1$s” feature?</string>
+    <string name="rating_not_really">Not really</string>
+    <string name="rating_good">Good</string>
+    <string name="mail_tool_feedback_subject">Feedback on %1$s — PDF Reader</string>
+    <plurals name="images_saved">
+        <item quantity="one">%d image saved</item>
+        <item quantity="other">%d images saved</item>
+    </plurals>
 </resources>

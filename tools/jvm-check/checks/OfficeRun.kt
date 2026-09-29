@@ -12,12 +12,20 @@ fun main(args: Array<String>) {
             else -> PptxToHtml.convert(parts, media)
         }
         File(outDir, "$name.html").writeText(html)
+        val kind = when (name.substringAfterLast('.')) {
+            "docx" -> PrintCss.Kind.DOCUMENT
+            "xlsx" -> PrintCss.Kind.SHEET
+            else -> PrintCss.Kind.SLIDES
+        }
+        File(outDir, "$name.print.html").writeText(PrintCss.forPrint(html, kind))
         println("$name -> ${html.length} chars")
     }
     File(args[0], "../../../../../tools/jvm-check/fixtures").canonicalFile.listFiles { f -> f.extension == "docx" }?.forEach { f ->
         val parts = f.inputStream().use { OoxmlZip.read(it) }
         val media = OoxmlZip.extractMedia(parts, File(outDir, "media-${f.name}").apply { mkdirs() })
-        File(outDir, "${f.name}.html").writeText(DocxToHtml.convert(parts, media))
+        val html = DocxToHtml.convert(parts, media)
+        File(outDir, "${f.name}.html").writeText(html)
+        File(outDir, "${f.name}.print.html").writeText(PrintCss.forPrint(html, PrintCss.Kind.DOCUMENT))
         println("${f.name} converted")
     }
     val txt = TextToHtml.plain(TextToHtml.decode(File(samples, "sample.txt").readBytes()), "cut")

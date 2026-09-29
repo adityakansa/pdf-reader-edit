@@ -98,6 +98,7 @@ fun PdfReaderScreen(
     /** Home → Annotate: open with the Annotate tools already showing. */
     startAnnotating: Boolean = false,
     onEdit: (String) -> Unit = {},
+    onConvertToWord: (String) -> Unit = {},
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -203,6 +204,13 @@ fun PdfReaderScreen(
                     }
                     return@Row
                 }
+                // Screen 57: PDF to Word sits first in the reader's bar.
+                IconButton(onClick = { onConvertToWord(key) }) {
+                    com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileTypeIcon(
+                        com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocType.WORD,
+                        iconSize = 22.dp,
+                    )
+                }
                 IconButton(onClick = { viewModel.setSearching(true) }) {
                     Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.cd_search))
                 }
@@ -302,6 +310,16 @@ fun PdfReaderScreen(
                         )
                     }
                 }
+            }
+        },
+        bottomBar = {
+            // Screen 56: a photographed or scanned PDF has no text to select, so it offers to make one.
+            if (state.scanned && !state.highlightMode && !state.searching) {
+                com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.GradientButton(
+                    stringResource(R.string.menu_convert_word),
+                    onClick = { onConvertToWord(key) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                )
             }
         },
         floatingActionButton = {

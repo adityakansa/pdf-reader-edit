@@ -533,6 +533,60 @@ Answers "it has a PDF editor option — do we have that?" (screens 61–66). Yes
 Verified: `tools/jvm-check/run.sh` → **OK (75 tests)**. Every icon import was checked against the real icon jar.
 Not verified: the Compose editor on a device (keyboard, handles, zoom); no Android build can run here.
 
+## Step 12c — conversions: PDF to Word / Image, Office to PDF, Compress (2026-09-29)
+
+Screens 56, 57, 59, 60 and 71: the tools One Read lists under "Create & Convert".
+
+- **One Convert screen** (`ui/convert/ConvertScreen`, route `Convert(key, tool)`) runs every conversion:
+  - It shows the file, then "Converting… 42%" with a red bar that fills smoothly, and Cancel.
+  - Then "✓ Converted successfully!": a preview (the first picture for images), the file name with ✏ Rename,
+    "View locally" (where it was saved), Share (orange gradient) and Open.
+  - A one-time card asks "Are you satisfied with our 'PDF to Word' feature? 😐 Not really / 🥰 Good". Good opens
+    Play's in-app review; Not really opens a feedback email.
+  - Clear messages for password-protected PDFs, a PDF that cannot be made smaller, and failures.
+- **PDF to Word** (`convert/PdfToWord`, `pdf/text/WordLayout`, `office/DocxBuilder`):
+  - Pages with text are rebuilt as real Word structure: headings (clearly larger type), centred titles,
+    paragraphs (wrapped lines joined, "infor-/mation" de-hyphenated, gaps kept as space before), and **tables**
+    (rows with several cells side by side), in the PDF's page size.
+  - Scanned pages become the page picture plus the text ML Kit reads off it, so the result is editable.
+  - Checked with python-docx: Heading 1 centred, Heading 2, the joined paragraph, a 3×3 table, the picture and
+    the A4 section all came back.
+- **PDF to Image** (`convert/PdfToImages`): every page as a ~150 dpi JPEG in **Pictures/PDF Reader**, so the gallery
+  shows them (`OutputFolder.writeImage`).
+- **Word / PowerPoint / Excel / text to PDF** (`convert/OfficeToPdf`):
+  - The viewer's own HTML (now shared through `office/OfficeHtmlLoader`) is restyled for paper by
+    `office/PrintCss`, then printed by an off-screen WebView straight into a file. Chromium's paginator does the
+    work, so text stays selectable and tables break between rows.
+  - The print styles give: white A4 pages; every Excel sheet in turn without row and column headers; one slide
+    per landscape page, with a real height so no slide is split.
+  - Verified by printing the samples with the same engine (Chromium via Playwright) and rendering the PDFs:
+    Word 2 pages; Excel 2 sheets on 2 pages; PowerPoint 4 slides on 4 pages (it was 8 before the slide-height
+    fix, and the first Excel column was clipped before the margin fix).
+  - Writing the print job to a file uses `android/print/PdfPrintBridge`, the long-standing way to print a
+    WebView to PDF without a dialog. If a phone refuses it, the screen offers the system print screen with
+    "Save as PDF" instead (`Printing.printHtml`).
+- **Compress PDF** (`pdf/PdfCompressor`):
+  - Three levels (Low / Recommended / High).
+  - Large photos and scans are scaled down and re-saved as JPEG. Text, fonts and vector art are untouched.
+  - Pictures with transparency or masks and one-bit scans are skipped. A picture is replaced only when the
+    new one is smaller, and one shared by many pages is shrunk once.
+  - The result shows "2.4 MB → 820 KB (66% smaller)". If nothing got smaller, no copy is made.
+- **Split PDF** opens Organize pages (extract pages).
+- Entry points:
+  - Home tool tiles.
+  - Each file's ⋮: Convert to Word, Save pages as images and Compress for PDFs; Convert to PDF for Word, Excel,
+    PowerPoint and text files.
+  - A **W** button first in the PDF reader's bar (screen 57).
+  - For a PDF whose first page has no text (a scan or photo), a "Convert to Word" gradient button at the bottom
+    of the reader (screen 56).
+  - A PDF button in the Office viewer.
+
+Verified: harness **OK (76 tests)** (new `PdfToWordCheck`); print CSS checked in Chromium as above; every icon
+import checked against the icon jar.
+
+Not verified: the Android-only parts on a device — WebView printing through the bridge, ML Kit on scanned
+pages, and Bitmap re-encoding in Compress.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

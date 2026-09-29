@@ -88,7 +88,7 @@ fun toolsFor(type: DocType): List<Tool> = when (type) {
     DocType.WORD -> listOf(Tool.WORD_TO_PDF)
     DocType.PPT -> listOf(Tool.PPT_TO_PDF)
     DocType.EXCEL -> listOf(Tool.EXCEL_TO_PDF)
-    DocType.TEXT -> emptyList()
+    DocType.TEXT -> listOf(Tool.WORD_TO_PDF)
 }.filter { it in readyTools }
 
 /** Tools whose screens exist; the rest stay off Home until their step lands. */
@@ -96,6 +96,12 @@ val readyTools: Set<Tool> = setOf(
     Tool.IMAGE_TO_PDF,
     Tool.SCAN_TO_PDF,
     Tool.CREATE_PDF,
+    Tool.PDF_TO_WORD,
+    Tool.WORD_TO_PDF,
+    Tool.PDF_TO_IMAGE,
+    Tool.PPT_TO_PDF,
+    Tool.EXCEL_TO_PDF,
+    Tool.COMPRESS_PDF,
     Tool.EDIT_TEXT,
     Tool.ANNOTATE,
     Tool.ADD_TEXT,

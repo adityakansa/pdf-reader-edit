@@ -78,6 +78,10 @@ Play page and screenshots cannot be reached from this environment, so its exact 
 | PDF editor: edit text, add text, add image | ✅ retype any line (old words removed), size/colour/font/bold/italic, add text, add pictures | 12b |
 | Signature | ✅ (Pro) | 4 |
 | Merge / split PDF | ✅ merge; extract, rotate, delete pages | 10b |
+| PDF to Word, PDF to Image | ✅ headings, paragraphs and tables rebuilt; scans get picture + OCR text; pages as JPEGs | 12c |
+| Word / PPT / Excel to PDF | ✅ Chromium print of the viewer's page, A4, one slide per page | 12c |
+| Compress PDF | ✅ three levels, pictures re-encoded only when smaller | 12c |
+| Recycle bin | ✅ 30 days, restore | 12a |
 | Print | ✅ PDFs and every viewer page | 11a |
 | Share | ✅ | — |
 | Scan to PDF, images to PDF | ✅ with edge detection, filters, reorder | 3 |

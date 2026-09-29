@@ -40,6 +40,37 @@ class OutputFolder @Inject constructor(
         else writeViaFile(name, write)
     }
 
+    /**
+     * A picture (PDF to Image) into `Pictures/PDF Reader/`, where the gallery shows it. [bytes] is a JPEG.
+     */
+    suspend fun writeImage(baseName: String, bytes: ByteArray): Output = withContext(Dispatchers.IO) {
+        val name = "$baseName.jpg"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = context.contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "$PICTURES_PATH/")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)
+                ?: error("MediaStore refused a new picture")
+            runCatching { resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("No output stream") }
+                .onFailure { resolver.delete(uri, null, null); throw it }
+            resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+            // MediaStore renames on a clash ("Lease_page_1 (1).jpg"); report the name it kept.
+            val kept = resolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+                ?.use { c -> if (c.moveToFirst()) c.getString(0) else null } ?: name
+            Output(uri, kept)
+        } else {
+            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "PDF Reader").apply { mkdirs() }
+            val unique = uniqueName(name) { File(dir, it).exists() }
+            val file = File(dir, unique)
+            file.writeBytes(bytes)
+            Output(Uri.fromFile(file), unique)
+        }
+    }
+
     private fun writeViaMediaStore(name: String, mimeType: String, write: (OutputStream) -> Unit): Output {
         val resolver = context.contentResolver
         val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -98,6 +129,8 @@ class OutputFolder @Inject constructor(
     companion object {
         val RELATIVE_PATH = "${Environment.DIRECTORY_DOCUMENTS}/PDF Reader"
         const val DISPLAY_LOCATION = "Documents/PDF Reader"
+        val PICTURES_PATH = "${Environment.DIRECTORY_PICTURES}/PDF Reader"
+        const val PICTURES_LOCATION = "Pictures/PDF Reader"
 
         fun legacyDirectory(): File =
             File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "PDF Reader")

@@ -28,6 +28,10 @@ object Routes {
     @Serializable
     data object RecycleBin
 
+    /** A conversion or Compress on one file; [tool] is a `Tool` name. */
+    @Serializable
+    data class Convert(val key: String, val tool: String)
+
     /** The PDF editor; [tool] is an `EditorTool` name to start with (Home → Add text), null for Edit text. */
     @Serializable
     data class PdfEditor(val key: String, val tool: String? = null)
