@@ -19,11 +19,13 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfRenderSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,6 +46,10 @@ data class AiUiState(
     val error: String? = null,
     val done: Boolean = false,
     val summaryUnsupported: Boolean = false,
+    /** FR-069: the summary as it decodes, shown while [running]. */
+    val streamingText: String = "",
+    /** FR-065: ML Kit could not tell the page's language ("und"); the user picks it. */
+    val askSource: Boolean = false,
 )
 
 @HiltViewModel
@@ -151,11 +157,21 @@ class AiViewModel @Inject constructor(
         }
     }
 
-    fun run(onDone: () -> Unit) {
+    /**
+     * Runs the job on the selected pages. [sourceCode] is only passed after the user answered the
+     * "which language is this page in?" question that an undetectable page raises (FR-065).
+     */
+    fun run(onDone: () -> Unit, sourceCode: String? = null) {
         val current = _state.value
         val file = current.file ?: return
         if (current.selectedPages.isEmpty() || current.running) return
-        _state.value = current.copy(running = true, progress = 0f, error = null)
+        _state.value = current.copy(
+            running = true,
+            progress = 0f,
+            error = null,
+            streamingText = "",
+            askSource = false,
+        )
         runJob = viewModelScope.launch {
             val text = extractor.extract(file.uri, current.selectedPages.sorted())
                 .toSortedMap()
@@ -166,24 +182,39 @@ class AiViewModel @Inject constructor(
                 _state.value = _state.value.copy(running = false, error = context.getString(R.string.ai_no_text))
                 return@launch
             }
-            val output = runCatching {
+            val output = try {
                 when (current.job) {
                     AiJob.TRANSLATE -> {
-                        val target = current.target ?: return@runCatching null
-                        val source = translator.detectSource(text) ?: DEFAULT_SOURCE
-                        translator.translate(text, source, target) { progress ->
-                            _state.value = _state.value.copy(progress = progress)
+                        val target = current.target ?: return@launch
+                        val source = sourceCode ?: translator.detectSource(text)
+                        if (source == null) {
+                            _state.value = _state.value.copy(running = false, askSource = true)
+                            return@launch
+                        }
+                        if (source == target.code) {
+                            text
+                        } else {
+                            translator.translate(text, source, target) { progress ->
+                                _state.value = _state.value.copy(progress = progress)
+                            }
                         }
                     }
 
-                    AiJob.SUMMARY -> summaryEngine.summarise(text).first()
+                    AiJob.SUMMARY -> summaryEngine.summarise(text)
+                        .onEach { update -> _state.value = _state.value.copy(streamingText = update.text) }
+                        .first { it.finished }
+                        .text
                 }
-            }.getOrNull()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
 
-            if (output == null) {
+            if (output.isNullOrBlank()) {
                 _state.value = _state.value.copy(
                     running = false,
-                    error = context.getString(R.string.reader_open_failed),
+                    error = context.getString(R.string.ai_failed),
                 )
                 return@launch
             }
@@ -193,10 +224,14 @@ class AiViewModel @Inject constructor(
         }
     }
 
+    fun sourceQuestionDismissed() {
+        _state.value = _state.value.copy(askSource = false)
+    }
+
     fun cancel() {
         runJob?.cancel()
         runJob = null
-        _state.value = _state.value.copy(running = false, progress = 0f)
+        _state.value = _state.value.copy(running = false, progress = 0f, streamingText = "")
     }
 
     override fun onCleared() {
@@ -205,8 +240,5 @@ class AiViewModel @Inject constructor(
 
     private companion object {
         const val THUMB_WIDTH_PIXELS = 240
-
-        /** ML Kit needs a source language; English is the safest guess when detection says "und". */
-        const val DEFAULT_SOURCE = "en"
     }
 }

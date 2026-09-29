@@ -15,3 +15,6 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
+
+# FR-068: fetched by scripts/fetch-summary-model.sh, never committed (65.5 MB)
+*.gguf

@@ -143,6 +143,9 @@
     <string name="quit_message">Are you sure you want to quit and discard the changes?</string>
     <string name="action_quit">Quit</string>
     <string name="ai_no_text">No readable text on this page</string>
+    <string name="ai_failed">Something went wrong. Please try again.</string>
+    <string name="source_language_title">Which language is this page in?</string>
+    <string name="summary_writing">Writing summary…</string>
     <string name="ai_summary_unsupported">AI Summary isn\'t supported on this device</string>
     <string name="download_language_title">Download %1$s?</string>
     <string name="download_language_body">%1$s needs a %2$s language pack. It downloads once and then works offline.</string>

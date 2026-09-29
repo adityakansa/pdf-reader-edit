@@ -32,6 +32,48 @@ Not done yet in this step: sample assets (`assets/samples/*`) are not in the rep
 until they are added; the brand launcher icon is still the template (FR-006); reader, scan, sign and the
 AI screens are not written yet, so their nav destinations are absent from `AppNavHost`.
 
+## Step 5 — on-device AI: translate, summary engine, native build (2026-09-29)
+
+FRs touched: FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-071.
+
+Already in the repo before this step (written earlier but not recorded here): `ai/` (`PageTextExtractor`,
+`Translator`, `AiLimits`, `AiResultHolder`, `SummaryEngine`), `ocr/TextRecogniser`, `pdf/TextToPdf`, and
+`ui/ai/*` (assistant dialog, PDF-only picker, Select page with native ad, run screen with language sheet,
+download dialog and Quit dialog, result screen with Copy/Share/Save as PDF/Report).
+
+Changed in this step:
+- llama.cpp is now a git submodule at `app/src/main/cpp/llama.cpp`, pinned to tag `b11259`
+  (`d280808f5`). `app/src/main/cpp/CMakeLists.txt` builds it CPU-only (no OpenMP, no common/tools/tests,
+  shared libs, 16 KB page alignment), plus `llama_jni.cpp`: load model → tokenize the ChatML prompt → decode →
+  sample (repeat penalty over 64 tokens, top-k 40, top-p 0.95, temp 0.4) → stream each piece to Kotlin as raw
+  bytes. Kotlin returns false from the sink to cancel, so the loop stops at the next token.
+- `app/build.gradle.kts` turns on CMake only when the submodule is checked out (arm64-v8a only). Without
+  it the app still builds and Summary shows "isn't supported". `libc++_shared.so` is `pickFirsts` because OpenCV
+  ships it too.
+- FR-068: a new `:ai_summary_model` module (`com.android.asset-pack`, `install-time`) with
+  `assetPacks += ":ai_summary_model"` and `noCompress "gguf"`. The `.gguf` is git-ignored;
+  `scripts/fetch-summary-model.sh` downloads it and checks its size and sha256.
+- `SummaryModelDelivery` was looking in folders an install-time pack never uses. Install-time packs are
+  merged into the app's assets, so it now copies the asset once to `noBackupFilesDir/models/` (through a `.part`
+  file, size-checked) and gives llama.cpp that path.
+- `SummaryEngine.summarise` is now a `channelFlow` of `SummaryUpdate(text, finished)`. The run screen shows
+  the text as it is written, and the last update is the 2–3 paragraph clamp. The clamp and the UTF-8 handling
+  (a token can end partway through a character) moved to the pure `ai/SummaryParagraphs.kt`.
+- FR-065: when ML Kit says "und", the run stops and asks "Which language is this page in?" (all ML Kit
+  languages) instead of guessing English. Source == target skips translation. Cancelling (Quit) no longer shows
+  an error toast. A failed job says "Something went wrong" instead of "file could not be opened".
+- `SummaryParagraphsTest` no longer subclasses the abstract `android.content.Context`, which could not
+  compile; it tests `SummaryParagraphs` directly and has two new UTF-8 cases.
+
+Verified: `llama_jni.cpp` compiles and links with `-Wall -Wextra -Wl,--no-undefined` against a host
+(x86-64 Linux) build of llama.cpp b11259, and exports the expected `Java_…_LlamaBridge_nativeGenerate` symbol.
+
+Not verified: this container's network policy blocks `dl.google.com` (Google Maven and the Android SDK) and
+`huggingface.co`. So no Gradle/Android build ran for this step, the NDK build of llama.cpp did not run, the model
+was not downloaded, and no summary was generated. The JVM run of `SummaryParagraphsTest` was stopped
+before it finished (Maven Central rate-limited it). Run `./gradlew :app:assembleDebug :app:testDebugUnitTest`
+locally after `git submodule update --init`.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.
