@@ -1,0 +1,220 @@
+# Work done
+
+History and current state. Update this file with every FR you complete (date, FR IDs, what changed, how verified, what was not verified).
+
+## Step 1 — build setup, theme, shell, library (2026-09-30)
+
+FRs touched: FR-001, FR-002, FR-003, FR-004, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016,
+FR-017, FR-018, FR-019, FR-020 (code, assets pending), FR-040 (sheet), FR-080, FR-081, FR-082, FR-083,
+FR-084, FR-085, FR-086 (plumbing), FR-087, FR-088, FR-089, FR-100, FR-101, FR-104.
+
+Build: `gradle/libs.versions.toml` rewritten with the TECH_SPEC §1 set; `:app` now applies Compose, KSP,
+Hilt, Room and serialization on top of AGP 9's built-in Kotlin; minSdk 26, Java 17, R8 on for release with
+keep rules in `app/src/main/keepRules/rules.keep` (AGP 9 convention — `proguardFiles` is not used).
+`gradle.properties` carries `ALL_FILES_ACCESS`, the release ad unit ids and the privacy policy URL.
+
+FR-101 without a second manifest: `tools:node` rejects manifest placeholders, so the permission *name* is
+the placeholder instead — `${manageStoragePermission}` resolves to `MANAGE_EXTERNAL_STORAGE` or, when the
+flag is false, to `INTERNET`, which is already declared and merges away. One line of Gradle, no flavour.
+
+Code added under `…/pdfreaderpdffileedit/`: `App`, `MainActivity` (AppCompat + Compose + splash + the
+FR-021 VIEW intent filters), `di/AppModule`, `ui/theme/*`, `ui/components/*` (TypeBadge, TypeChips,
+FileRow, Intents), `ui/shell/*` (Routes, TopBar, BottomBar, AppNavHost, ShellViewModel), `ui/home/*`
+(HomeScreen + tabs, sheets, storage explainer), `ui/search/*`, `ui/settings/*` (S06 layout, Rate Us,
+Share, Privacy, Notices), `ui/paywall/*`, `ui/ai/AiAssistantDialog` (S03), `data/files/*` (DocFile,
+FileIndex, FileRepository, Room `file_meta`, StorageAccess, OutputFolder, SampleFiles, IncomingFile),
+`data/prefs/AppPreferences`, `ads/*` (UMP consent + adaptive banner), `billing/*` (BillingManager,
+Entitlement).
+
+Verified: `./gradlew :app:assembleDebug` succeeds. Nothing was run on a device.
+
+Not done yet in this step: sample assets (`assets/samples/*`) are not in the repo, so FR-020 shows nothing
+until they are added; the brand launcher icon is still the template (FR-006); reader, scan, sign and the
+AI screens are not written yet, so their nav destinations are absent from `AppNavHost`.
+
+## State of the repo (2026-09-29)
+
+- Fresh Android Studio template (no Activity). Not a git repository yet.
+- Package / applicationId `com.whats.web.scan.webscan.pdfreaderpdffileedit` (same publisher prefix as the sibling
+  `/Users/aditya/AndroidStudioProjects/WebScan`, a single-module View-based app with Play Billing in `ProActivity.kt`).
+- AGP 9.3.3, Gradle 9.5.0, compile/target SDK 37, minSdk 24 (spec raises to 26), Java 11, R8 disabled.
+- Dependencies: appcompat 1.8.0, core-ktx 1.19.1, material 1.14.0, junit/espresso test deps.
+- Manifest: bare `<application>` with template theme and launcher icon; no Activity, no permissions.
+- Source: only `ExampleUnitTest.kt` and `ExampleInstrumentedTest.kt`. **Nothing is stubbed and nothing is real — every FR is open.**
+
+## Step 2 — reader (2026-09-30)
+
+FRs touched: FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037.
+
+`pdf/`: `PdfRenderSession` and `text/PdfWords.kt` are near-verbatim ports of pdfscanner's; `text/PdfTextIndex`
+and `PdfMarkupWriter` are ports with the note/sticky-note half dropped (this app only highlights).
+`PdfAccess` is new and replaces pdfscanner's vault-coupled one: it turns a content URI into a descriptor
+for the platform renderer, an `InputStream` for PdfBox, a cache copy when PdfBox needs a real `File`, and
+a decrypted copy when the file is password protected (the platform renderer reports that as a bare
+`SecurityException`, which is the only signal there is).
+
+`ui/reader/`: `PdfPages` is the continuous reader ported from pdfscanner minus its paged and night modes;
+`PdfReaderScreen` adds the FR-037 bar (search with next/prev and a count, share, star, overflow with AI
+Translate / AI Summary / Highlight / Edit-Sign behind the crown). Highlighting drags a box over a page,
+resolves the words under it with `PdfWords`, and writes real `/Highlight` annotations to
+`<name>_highlighted.pdf` in the output folder — the original is never rewritten, which is simpler than the
+"replace when writable" rule in the spec and never risks someone's file.
+
+`office/`: `OoxmlZip` reads the archive once into memory (capped at 64 MB) and hands parts to
+`DocxToHtml` / `XlsxToHtml` / `PptxToHtml`, which build one HTML page each with the platform pull parser.
+`OfficeReaderScreen` shows it in a WebView with JavaScript off, `findAllAsync` for in-document search and
+the "Simplified view" label. Legacy `.doc/.xls/.ppt` short-circuit to the FR-036 message + chooser.
+
+Verified: `./gradlew :app:assembleDebug` succeeds. No device run, so page rendering, the DOCX/XLSX/PPTX
+conversions and the highlight round-trip are unverified against real files.
+
+## Step 3 — create PDF: images and scanning (2026-09-30)
+
+FRs touched: FR-040, FR-041, FR-042, FR-043, FR-044, FR-045.
+
+`:third-party:opencv` copied verbatim from pdfscanner (17 MB of generated sources and `.so`s) and added to
+`settings.gradle.kts`; `:app` gained LiteRT, CameraX (incl. `camera-view`) and `abiFilters arm64-v8a,
+armeabi-v7a` on `defaultConfig` so debug APKs carry no x86 either. The DocAligner model and its notice are
+in `app/src/main/assets/`.
+
+`imaging/` is the pdfscanner port: `DocumentDetector`, `DocAlignerCorners`, `PerspectiveWarper`,
+`PageFilters` (the three Pro-only filters removed), `PageProcessor`, `QuadGeometry`, `QuadEditing`,
+`QuadSmoother`, `StabilityTracker`, `SkewEstimator`, `ImageFormat`. `imaging/model/ScanTypes.kt` is a
+trimmed `core/model`: four filters, three page sizes, `Quad`/`NormalizedPoint` (now `@Serializable` so a
+session can be written to disk), `PdfLayout`, `FittedRect`. `PerceptualHash` and `ProPageFilters` dropped.
+
+`pdf/`: `PdfWriter` + `PdfOverlay` ported minus encryption and the invisible OCR text layer;
+`drawOverlay` is shared with the signer. `ImagesToPdf` is new (FR-041): sampled decode to 2,480 px,
+EXIF-upright, JPEG 85, up to 100 images.
+
+`ui/scan/` is written fresh rather than ported — pdfscanner's `CameraViewModel` is 1,159 lines for seven
+modes. `CameraViewModel` is ~150: analysis frames → `DocumentDetector` → `QuadSmoother` →
+`StabilityTracker` → auto-capture, plus flash, gallery import and the session count. `CameraScreen` binds
+CameraX and draws the live outline. `ScanSessionStore` keeps pages and their crop/filter/rotation as JSON
+in `noBackupFilesDir/scan`. `ui/scan/review/` has the crop editor (corner drag with snapping to the
+detected quad, refusing concave quads), rotate, the four filters, reorder, delete with an Undo snackbar,
+and Save, which runs `PageProcessor` per page into `PdfWriter` and out through `OutputFolder`.
+
+A written PDF is handed to `IncomingFile` — the same path an "Open with" document takes — so the shell
+opens it in the reader without waiting for MediaStore to index it. `IncomingFile` is now a `Channel`, not
+a replaying `SharedFlow`, so a rotation cannot reopen the last document.
+
+Verified: `./gradlew :app:assembleDebug` succeeds (112 MB debug APK — both ABIs, OpenCV and the 2.3 MB
+DocAligner model; a release bundle splits by ABI). Nothing run on a device: detection, auto-capture, the
+crop editor and PDF output are all unverified in practice.
+
+Known gaps in this step: reordering is "nudge one place later", not drag-and-drop (FR-041/FR-043 AC says
+drag); there is no "Apply edges" reveal animation; the review screen has no per-page "add more pages"
+return other than the + button popping back to the camera.
+
+## Step 4 — signature and edit (2026-09-30)
+
+FRs touched: FR-050, FR-051, FR-052, FR-053.
+
+`sign/SignatureStore` keeps at most three transparent PNGs in `filesDir/signatures` (no database, no
+encryption — `allowBackup=false` already keeps them on the phone). `sign/SignatureInk` is the pdfscanner
+ink lift, wrapped in an `extract()` that picks the paper level from the 90th-percentile luma and returns
+null when there is too little ink, which is FR-051's "No signature found". `sign/Placement` +
+`PlacementBounds` is pdfscanner's `AnnotationBounds` maths without the database entity.
+
+`ui/sign/SignaturePad.kt` is the single pad the spec asks for (pdfscanner has two): undo, clear, and a
+save that renders the strokes cropped to the ink on transparency, with ink and paper colours fixed in
+both themes so a signature is never written white-on-white into someone's contract.
+`PlaceOnPdfScreen` renders the page through `PdfRenderSession`, places signatures and text/date stamps as
+page fractions, and drives them with `detectTransformGestures` (drag, pinch 5–150 %, rotate).
+
+`pdf/PdfSigner` is new — pdfscanner has no path to sign an *existing* PDF. Each page is reopened with
+`AppendMode.APPEND`, so existing text and its selectability are untouched, and placements are mapped onto
+the page's `cropBox` and `/Rotate` before `drawOverlay` (shared with `PdfWriter`) draws them. Output is
+`<name>_signed.pdf` through `OutputFolder`; the original is never rewritten.
+
+Verified: `./gradlew :app:compileDebugKotlin` succeeds. Not verified: the FR-053 AC's "within 1 pt"
+placement check needs a device or instrumented test and has not been run — in particular the `/Rotate`
+90/270 mapping is reasoned, not measured.
+
+## Documentation pass (2026-09-29) — no app code written, nothing committed
+
+Inputs: the client's Play Store copy (in `BRD.md` §5), 13 client screenshots, this repo, and pdfscanner.
+
+| File | Content |
+|---|---|
+| `docs/BRD.md` | Why/what: users, goals, scope, store-copy trace, R1–R8 requirements, exact ad placements, NFRs, assumptions |
+| `docs/TECH_SPEC.md` | How: stack, package layout, per-FR design, pdfscanner port map + improvements, on-device AI, Play compliance |
+| `docs/FR_CHECKLIST.md` | 65 FRs (FR-001…FR-105) with testable AC, sources, files, deps, Play notes, status (0 done) |
+| `docs/architecture.md` | Current template structure, target module/package diagram, scan/signature/AI data flows |
+| `docs/workdone.md` | This file |
+| `docs/screenshots/S01…S13-*.jpg` | 13 client screenshots (one file each). Names are listed at the top of `BRD.md`. |
+| `graphify-out/` | Code graph of the current codebase (below) |
+
+### Code graph
+
+Built with the graphify skill (`/Users/aditya/.claude/skills/graphify/SKILL.md`, package `graphifyy`, interpreter in
+`graphify-out/.graphify_python`) **before** the docs were written, so it is the pre-implementation baseline.
+
+- Outputs: `graphify-out/graph.json`, `graphify-out/graph.html`, `graphify-out/GRAPH_REPORT.md`, `manifest.json` (for incremental
+  updates), `cache/`, `cost.json`.
+- Result: 28 nodes, 24 edges, 7 communities — Template Launcher Icons, Instrumented Test Stub, Unit Test Stub, Gradle Wrapper
+  Script, App Module Build, Root Build Script, Settings Module Include. 100 % EXTRACTED, 0 tokens.
+- Code extracted by AST; the 10 launcher-icon images were described inline (default template icon) instead of by subagents.
+- Health check warning: 5 dangling-endpoint edges — imports in the two example tests pointing at external JUnit/AndroidX test
+  symbols (`AndroidJUnit4`, `RunWith`, `Test`, `InstrumentationRegistry`). Expected, not corruption.
+- After code changes: `graphify update .` (code only, no LLM). Full rebuild with docs/images: run the skill (`/graphify .`).
+  Query: `graphify query "<question>"`, `graphify path "A" "B"`, `graphify explain "X"`.
+
+### Reference project: pdfscanner (DocVault)
+
+`/Users/aditya/StudioProjects/pdfscanner` — it is **not** under `AndroidStudioProjects`. Multi-module Compose + Hilt app,
+package `com.nuvoralabs.docvault`, release 1.1. Read its `CLAUDE.md`, `architecture.md`, `memory.md`,
+`docs/pdf-engine-decision.md` before porting. What this app reuses (exact list in TECH_SPEC §5, §6, §8):
+
+- Scanner: `core/imaging/*` (DocAligner TFLite + OpenCV detector, warper, filters, quad editing, stability tracker),
+  `feature/capture/.../camera/*` and `review/*` (Document mode), `core/data/.../session/ScanSessionStore.kt`,
+  `third-party/opencv` (slim OpenCV 4.14, 9.4 MB/ABI).
+- PDF: `core/pdf/.../PdfWriter.kt`, `PdfOverlay.kt`, `PdfMarkupWriter.kt`, `PdfDecryptor.kt`, `PdfWatermarker.kt` (append pattern),
+  `render/PdfRenderSession.kt`, `text/PdfTextIndex.kt`, `text/PdfWords.kt`; `core/data/.../pdf/PdfAccess.kt`,
+  `core/data/.../tools/ImagePdfRepository.kt`; reader UI `feature/reader/.../reader/PdfPages.kt`, `markup/MarkupLayer.kt`.
+- Signature: `core/data/.../sign/SignatureRepository.kt`, `AnnotationRepository.kt` (`AnnotationBounds`),
+  `core/ui/.../component/SignaturePad.kt`, `feature/document/.../sign/SignaturePad.kt`, `StampDialog.kt`,
+  `feature/capture/.../camera/SignatureInk.kt`.
+- OCR `core/ocr/.../TextRecogniser.kt`; ads `core/ads/.../AdConsent.kt`, `AdManager.kt`, `feature/home/.../ads/AdBanner.kt`;
+  billing `core/billing/*`; manifest hygiene from `app/src/main/AndroidManifest.xml`.
+- Improvements decided (TECH_SPEC §5): Document mode only (its `CameraViewModel.kt` is 1,159 lines for 7 modes); no encrypted
+  vault; direct PDF output; new `PdfSigner` for existing PDFs (pdfscanner can only sign its own scanned pages); one SignaturePad;
+  `PdfDocument` instead of Helvetica-only `TextPdf.kt` for AI output.
+- Deliberate divergence: pdfscanner ships with **no storage permission**; this app needs device-wide listing (screenshots), so it
+  uses All files access with a SAF fallback flag.
+
+### Decisions and assumptions recorded
+
+- On-device AI: ML Kit Translation (~30 MB per language, one-time download from Google's ML Kit host) + summary model
+  Minueza-2-96M-Instruct-Variant-04 Q2_K GGUF (`Minueza-2-96M-Instruct-Variant-04.Q2_K.gguf`, 65,518,432 bytes, Apache-2.0,
+  `mradermacher/Minueza-2-96M-Instruct-Variant-04-GGUF`) run by llama.cpp (~6 MB stripped arm64 `.so`). Client (2026-09-29):
+  ship this file with the app (install-time asset pack, no second download). The Play install is therefore over 60 MB.
+  Smallest real file that wrote
+  multi-paragraph prose in a local llama.cpp test; output is loosely on-topic and invented, which is accepted. Nothing
+  downloadable under 60 MB qualified. Gemma 3 270M (≥ 180 MB), MediaPipe (26.6 MB `.so`) and Gemini Nano (device coverage)
+  rejected. Upgrade path if closer-to-page text is wanted: SmolLM2-135M-Instruct Q4_0 (91,893,088 bytes). The app clamps output to
+  2 or 3 paragraphs. FR-070 (translate-then-summarise) dropped.
+- Screenshot readings: "Choose 1 page" = free-tier limit; sample rows = bundled samples for empty lists; list-with-pen icon =
+  multi-select; ad ⓘ/"AI" = AdChoices; Select page ad = small native ad; "Edit" in Pro = signature + text stamp (highlight free);
+  S04's two Portuguese entries collapse to one (ML Kit limit).
+- Client decisions (2026-09-29): the library scans the whole phone for PDF/Word/Excel/PPT (MediaStore + a walk of public
+  folders, FR-011) and lists them like S07–S10. The app registers as an opener for all seven document MIME types and
+  Settings has "Set as default" (FR-021). Translation targets are only Italian, Polish, Portuguese, Dutch, French,
+  German, Spanish (Arabic removed at client request); each ~30 MB model downloads only when the user picks it (FR-064/065). French/German/Spanish were chosen
+  as the "2–3 more European" languages.
+
+### Open questions / blockers for the client
+
+1. UI languages to ship beyond English (FR-005).
+2. Is a one-time model download from Google's ML Kit host acceptable for translation? (Otherwise translation needs a custom
+   PAD-delivered engine, not in v1.)
+3. All files access declaration may be rejected by Play; SAF fallback is specified (FR-101).
+4. AdMob app/unit IDs, Play Console subscription setup (`pdf_pro`, trial length, prices), privacy policy URL, brand icon/font.
+5. Legacy `.doc/.xls/.ppt` are hand-off only in v1.
+
+### Not verified in this pass
+
+- No build was run (no code changed). Dependency versions marked *pin at implementation* in TECH_SPEC were not resolved.
+- Summary model was tested only on a Mac (llama.cpp `b11259`, CPU, ~350 tokens/s, 231 MB peak RSS). Speed and memory on a
+  2 GB arm64 phone must be confirmed at FR-069. No accuracy measurement is required.

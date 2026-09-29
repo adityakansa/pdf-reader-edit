@@ -1,0 +1,186 @@
+<resources>
+    <string name="app_name">PDF Reader &amp; File Edit</string>
+
+    <!-- Shell -->
+    <string name="title_pdf">PDF</string>
+    <string name="title_reader">Reader</string>
+    <string name="tab_document">Document</string>
+    <string name="tab_recent">Recent</string>
+    <string name="tab_favourite">Favourite</string>
+    <string name="tab_setting">Setting</string>
+    <string name="cd_create_pdf">Create PDF</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_go_pro">Go Pro</string>
+    <string name="cd_sort">Sort</string>
+    <string name="cd_select">Select files</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_favourite">Favourite</string>
+
+    <!-- Chips -->
+    <string name="chip_all">All</string>
+    <string name="chip_pdf">PDF</string>
+    <string name="chip_word">Word</string>
+    <string name="chip_excel">Excel</string>
+    <string name="chip_ppt">PPT</string>
+
+    <!-- Library -->
+    <string name="search_hint">Search in file</string>
+    <string name="clear">Clear</string>
+    <string name="empty_documents">No documents yet</string>
+    <string name="empty_recent">Files you open show up here</string>
+    <string name="empty_favourite">Star a file to find it here</string>
+    <string name="sample_file">Sample File</string>
+    <string name="sort_title">Sort by</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_date">Date</string>
+    <string name="sort_size">Size</string>
+    <string name="sort_ascending">Ascending</string>
+    <string name="sort_descending">Descending</string>
+    <string name="action_share">Share</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_file_info">File info</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="delete_title">Delete file?</string>
+    <string name="delete_message">This removes the file from your phone. This cannot be undone.</string>
+    <string name="delete_message_many">Delete %1$d files from your phone? This cannot be undone.</string>
+    <string name="delete_failed">Could not delete the file</string>
+    <string name="file_info_title">File info</string>
+    <string name="file_info_name">Name</string>
+    <string name="file_info_location">Location</string>
+    <string name="file_info_size">Size</string>
+    <string name="file_info_modified">Modified</string>
+    <string name="file_info_pages">Pages</string>
+    <string name="selected_count">%1$d selected</string>
+
+    <!-- Storage access (FR-010) -->
+    <string name="storage_title">Let the app find your documents</string>
+    <string name="storage_body">PDF Reader lists the PDF, Word, Excel and PowerPoint files already on your phone so you can open them in one tap. It only reads documents — nothing is uploaded.</string>
+    <string name="storage_grant">Allow access</string>
+    <string name="storage_pick_folder">Choose a folder instead</string>
+    <string name="storage_add_files">Add files</string>
+    <string name="storage_add_folder">Add folder</string>
+    <string name="storage_skip">Not now</string>
+
+    <!-- Create PDF (FR-040) -->
+    <string name="create_pdf_title">Create PDF</string>
+    <string name="image_to_pdf">Image to PDF</string>
+    <string name="scan_document">Scan Document</string>
+
+    <!-- Reader -->
+    <string name="reader_page_of">%1$d / %2$d</string>
+    <string name="reader_no_text">No text found</string>
+    <string name="reader_password_title">Password required</string>
+    <string name="reader_password_hint">Password</string>
+    <string name="reader_password_wrong">Wrong password</string>
+    <string name="reader_open_failed">This file could not be opened</string>
+    <string name="reader_simplified">Simplified view</string>
+    <string name="reader_legacy_format">This older format opens in another app</string>
+    <string name="reader_open_with">Open with</string>
+    <string name="reader_no_app">No app on this phone can open this file</string>
+    <string name="action_highlight">Highlight</string>
+    <string name="action_ai_translate">AI Translate</string>
+    <string name="action_ai_summary">AI Summary</string>
+    <string name="action_edit_sign">Edit / Sign</string>
+    <string name="saved_to">Saved to %1$s</string>
+    <string name="xlsx_row_cap">Showing the first 5,000 rows</string>
+
+    <!-- Image to PDF / scan -->
+    <string name="add_images">Add images</string>
+    <string name="page_size">Page size</string>
+    <string name="page_size_a4">A4</string>
+    <string name="page_size_letter">Letter</string>
+    <string name="page_size_fit">Fit image</string>
+    <string name="margin">Margin</string>
+    <string name="margin_none">None</string>
+    <string name="margin_small">Small</string>
+    <string name="margin_wide">Wide</string>
+    <string name="action_save">Save</string>
+    <string name="action_discard">Discard</string>
+    <string name="action_retake">Retake</string>
+    <string name="action_rotate">Rotate</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_done">Done</string>
+    <string name="filter_original">Original</string>
+    <string name="filter_enhanced">Enhanced</string>
+    <string name="filter_grey">Grey</string>
+    <string name="filter_bw">B&amp;W</string>
+    <string name="camera_permission_body">Scanning needs the camera. You can allow it in Settings.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="page_deleted">Page deleted</string>
+
+    <!-- Signature -->
+    <string name="signatures_title">Signatures</string>
+    <string name="signature_new">Draw signature</string>
+    <string name="signature_import">Import from photo</string>
+    <string name="signature_limit">Delete one signature first — you can keep 3.</string>
+    <string name="signature_none_found">No signature found in that photo</string>
+    <string name="add_text">Add text</string>
+    <string name="add_date">Add date</string>
+
+    <!-- AI -->
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="select_page">Select page</string>
+    <string name="pages_count">%1$d page(s)</string>
+    <string name="choose_pages">Choose %1$d page(s)</string>
+    <string name="page_limit_free">Free plan covers 1 page. Go Pro for more.</string>
+    <string name="page_limit_pro">You can pick up to %1$d pages.</string>
+    <string name="action_select">Select</string>
+    <string name="translate_to">Translate To</string>
+    <string name="translate_title">AI Translate</string>
+    <string name="summary_title">AI Summary</string>
+    <string name="action_translate">Translate</string>
+    <string name="action_summarize">Summarize</string>
+    <string name="ai_disclaimer">AI-generated — may be inaccurate</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_save_pdf">Save as PDF</string>
+    <string name="action_report">Report</string>
+    <string name="copied">Copied</string>
+    <string name="quit_translating">Quit Translating</string>
+    <string name="quit_summarizing">Quit Summarizing</string>
+    <string name="quit_message">Are you sure you want to quit and discard the changes?</string>
+    <string name="action_quit">Quit</string>
+    <string name="ai_no_text">No readable text on this page</string>
+    <string name="ai_summary_unsupported">AI Summary isn\'t supported on this device</string>
+    <string name="download_language_title">Download %1$s?</string>
+    <string name="download_language_body">%1$s needs a %2$s language pack. It downloads once and then works offline.</string>
+    <string name="download_wifi_only">Wi-Fi only</string>
+    <string name="action_download">Download</string>
+    <string name="downloading">Downloading…</string>
+    <string name="download_failed">Download failed</string>
+    <string name="translate_help_title">What AI Translate can do</string>
+    <string name="translate_help_body">Translation runs on your phone — no page text leaves the device. Quality is sentence by sentence, pairs go through English, and layout such as tables becomes plain paragraphs. Scanned pages are read with Latin-script text recognition first.</string>
+    <string name="source_language_unknown">Pick the language of the page</string>
+
+    <!-- Settings / Pro -->
+    <string name="settings_title">Setting</string>
+    <string name="pro_title">PDF Pro</string>
+    <string name="pro_subtitle">No Ads &amp; Unlock Premium Features</string>
+    <string name="pro_active">PDF Pro active</string>
+    <string name="free_trial">Free Trial</string>
+    <string name="get_pro">Get PDF Pro</string>
+    <string name="feature_ai_summary">AI Summary</string>
+    <string name="feature_ai_translate">AI Translate</string>
+    <string name="feature_ads_free">Ads-Free</string>
+    <string name="feature_edit">Edit</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_set_default">Set as default</string>
+    <string name="settings_rate">Rate Us</string>
+    <string name="settings_share">Share</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_privacy_options">Privacy options</string>
+    <string name="settings_notices">Open source notices</string>
+    <string name="share_app_text">PDF Reader &amp; File Edit — read, scan and sign PDFs on your phone: %1$s</string>
+    <string name="paywall_restore">Restore purchase</string>
+    <string name="paywall_manage">Manage subscription</string>
+    <string name="paywall_terms">Terms</string>
+    <string name="paywall_monthly">Monthly</string>
+    <string name="paywall_yearly">Yearly</string>
+    <string name="paywall_renews">Renews automatically. Cancel anytime in Google Play.</string>
+    <string name="paywall_trial_text">%1$s free trial, then %2$s. Renews automatically, cancel anytime in Google Play.</string>
+    <string name="paywall_unavailable">Plans are unavailable right now</string>
+    <string name="pro_required">This is a PDF Pro feature</string>
+    <string name="ad_badge">Ad</string>
+</resources>

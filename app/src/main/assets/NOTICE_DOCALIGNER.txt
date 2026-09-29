@@ -1,0 +1,11 @@
+DocAligner (document corner detection)
+======================================
+
+Bundled model: docaligner_lcnet100.tflite (~2.4 MB, TFLite FP16)
+Project: DocAligner
+Author: DocsaidLab
+Origin: https://github.com/DocsaidLab/DocAligner
+License: Apache License, Version 2.0
+
+DocVault runs this model entirely on-device via LiteRT. Page images never leave
+the phone. The model weights are redistributed unmodified under Apache-2.0 §4.

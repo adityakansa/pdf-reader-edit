@@ -1,0 +1,649 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "id": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest_exampleinstrumentedtest",
+      "label": "ExampleInstrumentedTest",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "file_type": "code",
+      "norm_label": "exampleinstrumentedtest",
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L16"
+    },
+    {
+      "id": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest_exampleunittest",
+      "label": "ExampleUnitTest",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Unit Test Stub",
+      "file_type": "code",
+      "norm_label": "exampleunittest",
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L12"
+    },
+    {
+      "id": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest_exampleinstrumentedtest_useappcontext",
+      "label": ".useAppContext()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "file_type": "code",
+      "norm_label": ".useappcontext()",
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L18"
+    },
+    {
+      "id": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest_exampleunittest_addition_iscorrect",
+      "label": ".addition_isCorrect()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Unit Test Stub",
+      "file_type": "code",
+      "norm_label": ".addition_iscorrect()",
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L13"
+    },
+    {
+      "id": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "label": "ExampleInstrumentedTest.kt",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "file_type": "code",
+      "norm_label": "exampleinstrumentedtest.kt",
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest",
+      "label": "ExampleUnitTest.kt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Unit Test Stub",
+      "file_type": "code",
+      "norm_label": "exampleunittest.kt",
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "gradlew",
+      "label": "gradlew",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "Gradle Wrapper Script",
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "gradlew",
+      "source_file": "gradlew",
+      "source_location": "L1"
+    },
+    {
+      "id": "gradlew__entry",
+      "label": "gradlew script",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "Gradle Wrapper Script",
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "gradlew script",
+      "source_file": "gradlew",
+      "source_location": "L1"
+    },
+    {
+      "id": "gradlew_die",
+      "label": "die()",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "Gradle Wrapper Script",
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "die()",
+      "source_file": "gradlew",
+      "source_location": "L98"
+    },
+    {
+      "id": "gradlew_warn",
+      "label": "warn()",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "Gradle Wrapper Script",
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "warn()",
+      "source_file": "gradlew",
+      "source_location": "L94"
+    },
+    {
+      "id": "app_build_gradle",
+      "label": "app/build.gradle.kts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "App Module Build",
+      "file_type": "code",
+      "norm_label": "app/build.gradle.kts",
+      "source_file": "app/build.gradle.kts",
+      "source_location": "L1"
+    },
+    {
+      "id": "build_gradle",
+      "label": "build.gradle.kts",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Root Build Script",
+      "file_type": "code",
+      "norm_label": "build.gradle.kts",
+      "source_file": "build.gradle.kts",
+      "source_location": "L1"
+    },
+    {
+      "id": "settings_gradle",
+      "label": "settings.gradle.kts",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "Settings Module Include",
+      "file_type": "code",
+      "norm_label": "settings.gradle.kts",
+      "source_file": "settings.gradle.kts",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_main_res_launcher_icon_template",
+      "label": "Default Android Studio launcher icon (template, not branded)",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "default android studio launcher icon (template, not branded)",
+      "source_file": "app/src/main/res/mipmap-hdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_hdpi_ic_launcher",
+      "label": "mipmap-hdpi/ic_launcher.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-hdpi/ic_launcher.webp",
+      "source_file": "app/src/main/res/mipmap-hdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_hdpi_ic_launcher_round",
+      "label": "mipmap-hdpi/ic_launcher_round.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-hdpi/ic_launcher_round.webp",
+      "source_file": "app/src/main/res/mipmap-hdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_mdpi_ic_launcher",
+      "label": "mipmap-mdpi/ic_launcher.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-mdpi/ic_launcher.webp",
+      "source_file": "app/src/main/res/mipmap-mdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_mdpi_ic_launcher_round",
+      "label": "mipmap-mdpi/ic_launcher_round.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-mdpi/ic_launcher_round.webp",
+      "source_file": "app/src/main/res/mipmap-mdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xhdpi_ic_launcher",
+      "label": "mipmap-xhdpi/ic_launcher.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xhdpi/ic_launcher.webp",
+      "source_file": "app/src/main/res/mipmap-xhdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xhdpi_ic_launcher_round",
+      "label": "mipmap-xhdpi/ic_launcher_round.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xhdpi/ic_launcher_round.webp",
+      "source_file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xxhdpi_ic_launcher",
+      "label": "mipmap-xxhdpi/ic_launcher.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xxhdpi/ic_launcher.webp",
+      "source_file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xxhdpi_ic_launcher_round",
+      "label": "mipmap-xxhdpi/ic_launcher_round.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xxhdpi/ic_launcher_round.webp",
+      "source_file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xxxhdpi_ic_launcher",
+      "label": "mipmap-xxxhdpi/ic_launcher.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xxxhdpi/ic_launcher.webp",
+      "source_file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "app_src_main_res_mipmap_xxxhdpi_ic_launcher_round",
+      "label": "mipmap-xxxhdpi/ic_launcher_round.webp",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Template Launcher Icons",
+      "contributor": null,
+      "file_type": "image",
+      "norm_label": "mipmap-xxxhdpi/ic_launcher_round.webp",
+      "source_file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "androidjunit4",
+      "label": "androidjunit4",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "androidjunit4",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "instrumentationregistry",
+      "label": "instrumentationregistry",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "instrumentationregistry",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "runwith",
+      "label": "runwith",
+      "community": 1,
+      "community_name": "Instrumented Test Stub",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "runwith",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "test",
+      "label": "test",
+      "community": 2,
+      "community_name": "Unit Test Stub",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "test",
+      "source_file": "",
+      "type": "external"
+    }
+  ],
+  "links": [
+    {
+      "source": "gradlew__entry",
+      "target": "gradlew_die",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "gradlew",
+      "source_location": "L129",
+      "weight": 1.0
+    },
+    {
+      "source": "gradlew__entry",
+      "target": "gradlew_warn",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "gradlew",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "target": "androidjunit4",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.test.ext.junit.runners.AndroidJUnit4"
+      },
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "target": "instrumentationregistry",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.test.platform.app.InstrumentationRegistry"
+      },
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "target": "test",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "org.junit.Test"
+      },
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest",
+      "target": "test",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "org.junit.Test"
+      },
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "target": "runwith",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "org.junit.runner.RunWith"
+      },
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest",
+      "target": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest_exampleinstrumentedtest",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest",
+      "target": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest_exampleunittest",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "gradlew",
+      "target": "gradlew__entry",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "gradlew",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "gradlew",
+      "target": "gradlew_warn",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "gradlew",
+      "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "gradlew",
+      "target": "gradlew_die",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "gradlew",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest_exampleinstrumentedtest",
+      "target": "app_src_androidtest_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleinstrumentedtest_exampleinstrumentedtest_useappcontext",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/androidTest/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleInstrumentedTest.kt",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest_exampleunittest",
+      "target": "app_src_test_java_com_whats_web_scan_webscan_pdfreaderpdffileedit_exampleunittest_exampleunittest_addition_iscorrect",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/test/java/com/whats/web/scan/webscan/pdfreaderpdffileedit/ExampleUnitTest.kt",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_hdpi_ic_launcher",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-hdpi/ic_launcher.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_hdpi_ic_launcher_round",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-hdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_mdpi_ic_launcher",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-mdpi/ic_launcher.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_mdpi_ic_launcher_round",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-mdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xhdpi_ic_launcher",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xhdpi/ic_launcher.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xhdpi_ic_launcher_round",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xxhdpi_ic_launcher",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xxhdpi_ic_launcher_round",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xxxhdpi_ic_launcher",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_main_res_mipmap_xxxhdpi_ic_launcher_round",
+      "target": "app_src_main_res_launcher_icon_template",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

@@ -1,0 +1,116 @@
+package com.whats.web.scan.webscan.pdfreaderpdffileedit.office
+
+import org.xmlpull.v1.XmlPullParser
+
+/**
+ * FR-034. XLSX → HTML: one table per sheet in workbook order, shared and inline strings resolved,
+ * numbers shown as they are stored. Formulas are not evaluated — the cached value in the file is what
+ * a spreadsheet app last wrote, and that is what is shown.
+ */
+object XlsxToHtml {
+
+    /** A phone cannot usefully scroll more than this, and the DOM cost grows with every cell. */
+    const val MAX_ROWS = 5_000
+    const val MAX_COLUMNS = 100
+
+    fun convert(parts: Map<String, ByteArray>, rowCapNotice: String): String {
+        val strings = sharedStrings(parts)
+        val sheets = sheetOrder(parts)
+        val body = StringBuilder()
+        var truncated = false
+        sheets.forEach { (name, path) ->
+            val bytes = parts[path] ?: return@forEach
+            body.append("<div class=\"sheet-name\">").append(OoxmlZip.escape(name)).append("</div>")
+            val sheet = sheet(OoxmlZip.parser(bytes), strings)
+            truncated = truncated || sheet.truncated
+            body.append(sheet.html)
+        }
+        if (truncated) body.append("<div class=\"notice\">").append(OoxmlZip.escape(rowCapNotice)).append("</div>")
+        return HtmlPage.wrap(body.toString())
+    }
+
+    private data class Sheet(val html: String, val truncated: Boolean)
+
+    /** Sheet name → part path, in the order the workbook lists them. */
+    private fun sheetOrder(parts: Map<String, ByteArray>): List<Pair<String, String>> {
+        val workbook = parts["xl/workbook.xml"] ?: return emptyList()
+        val rels = OoxmlZip.relationships(parts, "xl/_rels/workbook.xml.rels", "xl/")
+        val sheets = mutableListOf<Pair<String, String>>()
+        val parser = OoxmlZip.parser(workbook)
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            if (parser.eventType == XmlPullParser.START_TAG && parser.name == "sheet") {
+                val name = parser.getAttributeValue(null, "name") ?: continue
+                val id = parser.getAttributeValue(null, "r:id")
+                val path = rels[id] ?: continue
+                sheets += name to path
+            }
+        }
+        return sheets
+    }
+
+    private fun sharedStrings(parts: Map<String, ByteArray>): List<String> {
+        val bytes = parts["xl/sharedStrings.xml"] ?: return emptyList()
+        val strings = mutableListOf<String>()
+        val current = StringBuilder()
+        val parser = OoxmlZip.parser(bytes)
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            when (parser.eventType) {
+                XmlPullParser.START_TAG -> when (parser.name) {
+                    "si" -> current.setLength(0)
+                    "t" -> current.append(parser.nextText())
+                }
+
+                XmlPullParser.END_TAG -> if (parser.name == "si") strings += current.toString()
+            }
+        }
+        return strings
+    }
+
+    private fun sheet(parser: XmlPullParser, strings: List<String>): Sheet {
+        val out = StringBuilder("<table>")
+        var rows = 0
+        var truncated = false
+        var columnsInRow = 0
+        var cellType: String? = null
+        var open = false
+
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            when (parser.eventType) {
+                XmlPullParser.START_TAG -> when (parser.name) {
+                    "row" -> {
+                        if (rows >= MAX_ROWS) {
+                            truncated = true
+                        } else {
+                            out.append("<tr>")
+                            open = true
+                            columnsInRow = 0
+                        }
+                        rows++
+                    }
+
+                    "c" -> cellType = parser.getAttributeValue(null, "t")
+
+                    "v", "t" -> {
+                        val raw = parser.nextText()
+                        if (open && columnsInRow < MAX_COLUMNS) {
+                            val text = if (cellType == "s") {
+                                strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
+                            } else {
+                                raw
+                            }
+                            out.append("<td>").append(OoxmlZip.escape(text)).append("</td>")
+                            columnsInRow++
+                        }
+                    }
+                }
+
+                XmlPullParser.END_TAG -> if (parser.name == "row" && open) {
+                    out.append("</tr>")
+                    open = false
+                }
+            }
+        }
+        out.append("</table>")
+        return Sheet(out.toString(), truncated)
+    }
+}

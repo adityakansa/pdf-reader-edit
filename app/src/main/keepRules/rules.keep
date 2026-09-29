@@ -1,0 +1,17 @@
+# PdfBox-Android reads fonts/resources reflectively and ships BouncyCastle for encrypted PDFs.
+-keep class com.tom_roush.pdfbox.** { *; }
+-keep class org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
+-dontwarn javax.naming.**
+-dontwarn com.gemalto.jp2.**
+
+# LiteRT / ML Kit native entry points.
+-keep class org.tensorflow.lite.** { *; }
+-keep class com.google.mlkit.** { *; }
+-dontwarn org.tensorflow.lite.**
+
+# OpenCV JNI bindings (loaded by name).
+-keep class org.opencv.** { *; }
+
+# llama.cpp JNI wrapper — native code calls back by signature.
+-keep class com.whats.web.scan.webscan.pdfreaderpdffileedit.ai.LlamaBridge { *; }

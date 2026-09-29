@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="samples" path="samples/" />
+    <files-path name="signatures" path="signatures/" />
+    <cache-path name="cache" path="." />
+    <external-path name="external" path="." />
+</paths>
