@@ -17,6 +17,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TypeExcel
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TypePdf
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TypePpt
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TypeText
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TypeWord
 
 /** FR-012: one colour per family, used by the badge, the chip tint and the file card. */
@@ -26,6 +27,7 @@ val DocType.color: Color
         DocType.WORD -> TypeWord
         DocType.EXCEL -> TypeExcel
         DocType.PPT -> TypePpt
+        DocType.TEXT -> TypeText
     }
 
 val DocType.badgeLabel: String
@@ -34,6 +36,7 @@ val DocType.badgeLabel: String
         DocType.WORD -> "DOC"
         DocType.EXCEL -> "XLS"
         DocType.PPT -> "PPT"
+        DocType.TEXT -> "TXT"
     }
 
 @Composable

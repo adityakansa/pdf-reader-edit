@@ -6,7 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.BorderColor
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Pageview
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.HorizontalDivider
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Printing
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -94,6 +102,8 @@ fun PdfReaderScreen(
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var goToOpen by remember { mutableStateOf(false) }
+    var bookmarksOpen by remember { mutableStateOf(false) }
+    var pagesOpen by remember { mutableStateOf(false) }
     val searchFocus = remember { FocusRequester() }
 
     // Back closes whatever mode is open before it leaves the document, as Acrobat does.
@@ -193,6 +203,16 @@ fun PdfReaderScreen(
                 ) {
                     Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
                 }
+                if (state.pages.isNotEmpty()) {
+                    val marked = state.currentPage in state.bookmarks
+                    IconButton(onClick = viewModel::toggleBookmark) {
+                        Icon(
+                            if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = stringResource(if (marked) R.string.cd_remove_bookmark else R.string.cd_add_bookmark),
+                            tint = if (marked) BrandRed else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
                 IconButton(onClick = viewModel::toggleFavourite) {
                     Icon(
                         if (state.favourite) Icons.Filled.Star else Icons.Outlined.StarBorder,
@@ -205,6 +225,32 @@ fun PdfReaderScreen(
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more))
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reader_pages)) },
+                            leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null) },
+                            onClick = { menuOpen = false; pagesOpen = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reader_bookmarks)) },
+                            leadingIcon = { Icon(Icons.Filled.Bookmarks, contentDescription = null) },
+                            onClick = { menuOpen = false; bookmarksOpen = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reader_go_to_page)) },
+                            leadingIcon = { Icon(Icons.Filled.Pageview, contentDescription = null) },
+                            onClick = { menuOpen = false; goToOpen = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_print)) },
+                            leadingIcon = { Icon(Icons.Filled.Print, contentDescription = null) },
+                            onClick = {
+                                menuOpen = false
+                                viewModel.printableUri()?.let { uri ->
+                                    Printing.printPdf(context, uri, state.file?.name ?: "Document")
+                                }
+                            },
+                        )
+                        HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_ai_translate)) },
                             leadingIcon = { Icon(Icons.Filled.Translate, contentDescription = null) },
@@ -386,6 +432,23 @@ fun PdfReaderScreen(
                 }
             },
             dismissButton = { TextButton(onClick = onBack) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+    if (bookmarksOpen) {
+        BookmarksDialog(
+            bookmarks = state.bookmarks.sorted(),
+            onGo = { page -> bookmarksOpen = false; viewModel.goToPage(page) },
+            onDismiss = { bookmarksOpen = false },
+        )
+    }
+    if (pagesOpen) {
+        PageGridSheet(
+            pageCount = state.pages.size,
+            current = state.currentPage,
+            bookmarks = state.bookmarks,
+            render = viewModel::render,
+            onGo = { page -> pagesOpen = false; viewModel.goToPage(page) },
+            onDismiss = { pagesOpen = false },
         )
     }
     if (goToOpen) {

@@ -94,32 +94,34 @@ object XlsxToHtml {
     }
 
     private fun sheet(parser: XmlPullParser, strings: List<String>): Sheet {
-        val out = StringBuilder("<table>")
-        var rows = 0
+        val rows = mutableListOf<List<String>>()
         var truncated = false
-        var columnsInRow = 0
+        var row: MutableList<String>? = null
+        var rowNumber = 0
         var cellType: String? = null
         var cellColumn = -1
         val cellText = StringBuilder()
-        var open = false
 
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             when (parser.eventType) {
                 XmlPullParser.START_TAG -> when (parser.name) {
                     "row" -> {
-                        if (rows >= MAX_ROWS) {
+                        // Rows can be skipped in the file too (blank rows); `r` says which row this is.
+                        val declared = parser.getAttributeValue(null, "r")?.toIntOrNull()
+                        val target = (declared ?: (rowNumber + 1)).coerceAtLeast(rowNumber + 1)
+                        if (target > MAX_ROWS) {
                             truncated = true
+                            row = null
                         } else {
-                            out.append("<tr>")
-                            open = true
-                            columnsInRow = 0
+                            while (rows.size < target - 1) rows.add(emptyList())
+                            row = mutableListOf()
                         }
-                        rows++
+                        rowNumber = target
                     }
 
                     "c" -> {
                         cellType = parser.getAttributeValue(null, "t")
-                        cellColumn = columnIndex(parser.getAttributeValue(null, "r")) ?: columnsInRow
+                        cellColumn = columnIndex(parser.getAttributeValue(null, "r")) ?: (row?.size ?: 0)
                         cellText.setLength(0)
                     }
 
@@ -128,32 +130,64 @@ object XlsxToHtml {
                 }
 
                 XmlPullParser.END_TAG -> when (parser.name) {
-                    "c" -> if (open && cellColumn < MAX_COLUMNS) {
-                        // Blank cells are left out of the XML, so pad up to this cell's own column.
-                        while (columnsInRow < cellColumn) {
-                            out.append("<td></td>")
-                            columnsInRow++
+                    "c" -> row?.let { cells ->
+                        if (cellColumn < MAX_COLUMNS) {
+                            // Blank cells are left out of the XML, so pad up to this cell's own column.
+                            while (cells.size < cellColumn) cells += ""
+                            val raw = cellText.toString()
+                            cells += when (cellType) {
+                                "s" -> strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
+                                null, "n" -> displayNumber(raw)
+                                "b" -> if (raw.trim() == "1") "TRUE" else "FALSE"
+                                else -> raw
+                            }
                         }
-                        val raw = cellText.toString()
-                        val text = when (cellType) {
-                            "s" -> strings.getOrElse(raw.trim().toIntOrNull() ?: -1) { "" }
-                            null, "n" -> displayNumber(raw)
-                            else -> raw
-                        }
-                        out.append("<td>").append(OoxmlZip.escape(text)).append("</td>")
-                        columnsInRow++
                     }
 
-                    "row" -> if (open) {
-                        out.append("</tr>")
-                        open = false
-                    }
+                    "row" -> row?.let { rows.add(it); row = null }
                 }
             }
         }
-        out.append("</table>")
-        return Sheet(out.toString(), truncated)
+        return Sheet(grid(rows), truncated)
     }
+
+    /**
+     * The spreadsheet look people know from Excel: a grey header row of column letters, row numbers down
+     * the side, gridlines, numbers right-aligned. Trailing empty rows and columns are trimmed.
+     */
+    fun grid(rows: List<List<String>>): String {
+        val lastRow = rows.indexOfLast { r -> r.any { it.isNotBlank() } }
+        if (lastRow < 0) return "<div class=\"notice\">&nbsp;</div>"
+        val used = rows.subList(0, lastRow + 1)
+        val columns = used.maxOf { r -> r.indexOfLast { it.isNotBlank() } + 1 }.coerceAtLeast(1)
+        val out = StringBuilder("<div class=\"grid-wrap\"><table class=\"grid\"><thead><tr><th class=\"corner\"></th>")
+        repeat(columns) { out.append("<th>").append(columnName(it)).append("</th>") }
+        out.append("</tr></thead><tbody>")
+        used.forEachIndexed { index, cells ->
+            out.append("<tr><th class=\"rownum\">").append(index + 1).append("</th>")
+            repeat(columns) { c ->
+                val value = cells.getOrElse(c) { "" }
+                val numeric = value.isNotEmpty() && value.toBigDecimalOrNull() != null
+                out.append(if (numeric) "<td class=\"num\">" else "<td>").append(OoxmlZip.escape(value)).append("</td>")
+            }
+            out.append("</tr>")
+        }
+        return out.append("</tbody></table></div>").toString()
+    }
+
+    /** 0 → "A", 25 → "Z", 26 → "AA". */
+    fun columnName(index: Int): String {
+        var n = index + 1
+        val name = StringBuilder()
+        while (n > 0) {
+            val r = (n - 1) % LETTERS
+            name.insert(0, 'A' + r)
+            n = (n - 1) / LETTERS
+        }
+        return name.toString()
+    }
+
+    private const val LETTERS = 26
 
     /**
      * A stored number as Excel shows it by default: at most 15 significant digits, no trailing zeros, no

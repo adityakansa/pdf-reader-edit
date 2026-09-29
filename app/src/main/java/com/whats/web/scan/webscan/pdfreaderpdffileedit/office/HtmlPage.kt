@@ -23,6 +23,15 @@ td, th { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; vertical-ali
 .sheet-tabs label { flex: none; padding: 12px 16px; border-bottom: 3px solid transparent; color: #666;
                     font-weight: 600; white-space: nowrap; cursor: pointer; }
 .sheet-panel { display: none; }
+.grid-wrap { overflow-x: auto; margin: 0 -16px; }
+table.grid { display: table; width: auto; margin: 0; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+table.grid th, table.grid td { border: 0; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;
+  padding: 4px 8px; white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+table.grid thead th { position: sticky; top: 0; background: #f3f3f3; color: #666; font-weight: 500; text-align: center; z-index: 1; }
+table.grid th.rownum, table.grid th.corner { position: sticky; left: 0; background: #f3f3f3; color: #666; font-weight: 500;
+  text-align: center; min-width: 32px; z-index: 2; }
+table.grid td.num { text-align: right; }
+.plain { white-space: pre-wrap; font-size: 15px; line-height: 1.6; }
 .notice { color: #9e9e9e; font-size: 13px; margin: 8px 0; }
 ul { margin: 4px 0 4px 20px; padding: 0; }
 @media (prefers-color-scheme: dark) {
@@ -31,6 +40,8 @@ ul { margin: 4px 0 4px 20px; padding: 0; }
   .slide { border-color: #2a2a2a; }
   .sheet-tabs { border-color: #333; background: #121212; }
   .sheet-tabs label { color: #aaa; }
+  table.grid th, table.grid td { border-color: #333; }
+  table.grid thead th, table.grid th.rownum, table.grid th.corner { background: #1e1e1e; color: #aaa; }
 }
 </style>
 </head><body>

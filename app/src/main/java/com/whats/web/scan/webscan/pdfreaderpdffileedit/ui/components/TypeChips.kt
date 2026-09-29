@@ -2,6 +2,8 @@ package com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,12 +35,15 @@ fun TypeChips(
         DocType.WORD to R.string.chip_word,
         DocType.EXCEL to R.string.chip_excel,
         DocType.PPT to R.string.chip_ppt,
+        DocType.TEXT to R.string.chip_txt,
     )
     Row(
         modifier = modifier
             .fillMaxWidth()
+            // Six chips do not fit a 360 dp phone at large font sizes; the row scrolls instead of clipping.
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 8.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         entries.forEach { (type, label) ->

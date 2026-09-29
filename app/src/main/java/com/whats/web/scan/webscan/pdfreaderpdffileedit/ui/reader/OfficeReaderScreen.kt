@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
@@ -46,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.R
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.mimeType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Intents
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Printing
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 
 /** FR-033 … FR-037. The converted document in a WebView with JavaScript off. */
@@ -58,13 +60,14 @@ fun OfficeReaderScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val rowCapNotice = stringResource(R.string.xlsx_row_cap)
+    val textCapNotice = stringResource(R.string.text_cap)
     var webView by remember { mutableStateOf<WebView?>(null) }
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var matchActive by remember { mutableIntStateOf(0) }
     var matchTotal by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(key) { viewModel.load(key, rowCapNotice) }
+    LaunchedEffect(key) { viewModel.load(key, rowCapNotice, textCapNotice) }
     LaunchedEffect(webView) {
         webView?.setFindListener { active, total, done ->
             if (done) {
@@ -158,10 +161,21 @@ fun OfficeReaderScreen(
                 ) {
                     Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
                 }
+                if (state.html != null) {
+                    IconButton(
+                        onClick = {
+                            webView?.let { Printing.printWebView(context, it, state.file?.name ?: "Document") }
+                        },
+                    ) {
+                        Icon(Icons.Filled.Print, contentDescription = stringResource(R.string.action_print))
+                    }
+                }
                 IconButton(onClick = viewModel::toggleFavourite) {
                     Icon(
                         if (state.favourite) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                        contentDescription = stringResource(R.string.cd_favourite),
+                        contentDescription = stringResource(
+                            if (state.favourite) R.string.cd_unfavourite else R.string.cd_favourite,
+                        ),
                         tint = if (state.favourite) BrandRed else MaterialTheme.colorScheme.onSurface,
                     )
                 }

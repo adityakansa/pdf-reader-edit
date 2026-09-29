@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.billing.Entitlement
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileRepository
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.Bookmarks
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.ReadingPositions
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.OutputFolder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
@@ -47,6 +48,8 @@ data class ReaderUiState(
     val highlightMode: Boolean = false,
     val pendingHighlights: List<PdfMarkup> = emptyList(),
     val jumpTo: Int? = null,
+    /** Bookmarked pages of this PDF, zero-based. */
+    val bookmarks: Set<Int> = emptySet(),
     val savedTo: String? = null,
 )
 
@@ -56,6 +59,7 @@ class ReaderViewModel @Inject constructor(
     private val access: PdfAccess,
     private val outputFolder: OutputFolder,
     private val positions: ReadingPositions,
+    private val bookmarkStore: Bookmarks,
     entitlement: Entitlement,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ReaderUiState())
@@ -90,6 +94,7 @@ class ReaderViewModel @Inject constructor(
                     val pages = result.session.pageSizes()
                     // Reopen where the user stopped last time.
                     val resume = positions.lastPage(key).takeIf { it in pages.indices && it > 0 }
+                    _state.value = _state.value.copy(bookmarks = bookmarkStore.pages(key).filter { it in pages.indices }.toSet())
                     _state.value = _state.value.copy(
                         loading = false,
                         pages = pages,
@@ -260,6 +265,15 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun shareableUri() = _state.value.file?.let(repository::shareableUri)
+
+    /** Bookmarks the page on screen, or removes its bookmark. */
+    fun toggleBookmark() {
+        val key = _state.value.file?.key ?: return
+        _state.value = _state.value.copy(bookmarks = bookmarkStore.toggle(key, _state.value.currentPage))
+    }
+
+    /** What to hand the print service: the decrypted copy when the file needed a password. */
+    fun printableUri() = source?.uri ?: _state.value.file?.uri
 
     override fun onCleared() {
         session?.close()

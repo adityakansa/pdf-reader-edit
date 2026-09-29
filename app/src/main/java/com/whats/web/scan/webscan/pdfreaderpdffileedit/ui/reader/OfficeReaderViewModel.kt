@@ -10,6 +10,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.isLegacyOffice
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.DocxToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.OoxmlZip
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.PptxToHtml
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.TextToHtml
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.office.XlsxToHtml
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,7 +42,7 @@ class OfficeReaderViewModel @Inject constructor(
     private val _state = MutableStateFlow(OfficeUiState())
     val state: StateFlow<OfficeUiState> = _state.asStateFlow()
 
-    fun load(key: String, rowCapNotice: String) {
+    fun load(key: String, rowCapNotice: String, textCapNotice: String) {
         val file = repository.find(key) ?: run {
             _state.value = OfficeUiState(loading = false, failed = true)
             return
@@ -56,6 +57,19 @@ class OfficeReaderViewModel @Inject constructor(
             val mediaDir = File(context.cacheDir, "office-media")
             val html = withContext(Dispatchers.IO) {
                 runCatching {
+                    // CSV and TXT are text, not zip packages: they never reach the OOXML reader.
+                    when (file.ext.lowercase()) {
+                        "csv", "txt" -> {
+                            val bytes = context.contentResolver.openInputStream(file.uri)
+                                ?.use { it.readBytes() } ?: return@runCatching null
+                            val text = TextToHtml.decode(bytes)
+                            return@runCatching if (file.ext.equals("csv", ignoreCase = true)) {
+                                TextToHtml.csv(text, rowCapNotice)
+                            } else {
+                                TextToHtml.plain(text, textCapNotice)
+                            }
+                        }
+                    }
                     val parts = context.contentResolver.openInputStream(file.uri)
                         ?.use(OoxmlZip::read)
                         ?: return@runCatching null
@@ -64,7 +78,7 @@ class OfficeReaderViewModel @Inject constructor(
                         DocType.WORD -> DocxToHtml.convert(parts, media)
                         DocType.EXCEL -> XlsxToHtml.convert(parts, rowCapNotice)
                         DocType.PPT -> PptxToHtml.convert(parts, media)
-                        DocType.PDF -> null
+                        DocType.PDF, DocType.TEXT -> null
                     }
                 }.getOrNull()
             }

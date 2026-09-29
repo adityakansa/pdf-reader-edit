@@ -23,6 +23,16 @@
     <string name="chip_word">Word</string>
     <string name="chip_excel">Excel</string>
     <string name="chip_ppt">PPT</string>
+    <string name="chip_txt">TXT</string>
+    <string name="action_print">Print</string>
+    <string name="print_unavailable">Printing is not available on this phone.</string>
+    <string name="action_close">Close</string>
+    <string name="reader_pages">Pages</string>
+    <string name="reader_bookmarks">Bookmarks</string>
+    <string name="bookmarks_empty">No bookmarks yet. Tap the bookmark icon at the top to bookmark the page you are on.</string>
+    <string name="cd_add_bookmark">Bookmark this page</string>
+    <string name="cd_remove_bookmark">Remove bookmark</string>
+    <string name="text_cap">This file is very long; only the first part is shown.</string>
 
     <!-- Library -->
     <string name="search_hint">Search in file</string>

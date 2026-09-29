@@ -69,6 +69,8 @@ class IncomingFile @Inject constructor(
 
     private fun extensionOfMime(mime: String?): String? = when (mime) {
         "application/pdf" -> "pdf"
+        "text/plain" -> "txt"
+        "text/csv", "text/comma-separated-values" -> "csv"
         "application/msword" -> "doc"
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"
         "application/vnd.ms-excel" -> "xls"

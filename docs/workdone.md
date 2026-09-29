@@ -269,6 +269,35 @@ JavaScript off and checked by eye (DOCX headings/lists/table, XLSX tabs and numb
 Resources, braces and icon imports are checked. Not verified: the Compose screens (`OrganizePagesScreen`, the
 dialogs, the home wiring) have not been compiled, since they need the Android SDK and Google's Maven, which are blocked here.
 
+## Step 11a — CSV fix, TXT files, spreadsheet grid, print, bookmarks, page navigator (2026-09-29)
+
+Parity work against "Document Reader - PDF Editor" (Simple Design, `alldocumentreader.office.viewer.filereader`),
+based on its published description. Its Play page and screenshots are blocked from this environment.
+
+- **CSV bug fixed.** CSV files were listed under Excel but always failed ("could not be opened"): the viewer sent
+  every Excel file to the XLSX zip reader. CSV and TXT now go to `office/TextToHtml`: RFC-4180 parsing (quoted
+  commas, doubled quotes, line breaks in fields), comma / semicolon / tab detected from the first line, and text
+  decoded as UTF-8 (with or without BOM), UTF-16 (BOM) or Windows-1252.
+- **TXT support**: a new `DocType.TEXT` (grey "TXT" badge, "TXT" chip, `sample.txt` sample). The library scans `.txt`
+  files, "Open with" registers `text/plain`, `text/csv` and `text/comma-separated-values`, and the viewer shows wrapped
+  text with comfortable line spacing. Very long files are cut at 2M characters with a notice. The chip row now scrolls
+  so six chips fit on small phones.
+- **Spreadsheet grid** (Excel and CSV): a grey header of column letters (A, B, … AA), row numbers down the side,
+  gridlines, right-aligned numbers, TRUE/FALSE for boolean cells, and blank rows kept in place (the row `r` attribute).
+  Trailing empty rows and columns are trimmed. `XlsxToHtml` now builds rows first and renders them with `grid()`.
+- **Print** (`ui/components/Printing`): PDFs are streamed to Android's print service (the decrypted copy for
+  password PDFs). Word, Excel, PowerPoint and text files print the viewer's page (`WebView.createPrintDocumentAdapter`).
+  In the reader ⋮ menu and the Office viewer bar.
+- **Bookmarks** (`data/prefs/Bookmarks`): a bookmark icon in the reader bar toggles the page on screen, and
+  ⋮ → Bookmarks lists them. **Pages**: ⋮ → Pages opens a thumbnail grid of every page (current page outlined,
+  bookmarks marked), and a tap jumps there. **Go to page** is also in the menu.
+
+Verified with `tools/jvm-check/run.sh`: **OK (34 tests)**, including the new `TextToHtmlTest` (CSV quoting, CRLF,
+delimiter detection, encodings, grid output, Excel column names). The harness also caught and fixed a real compile
+error (`rows += emptyList()` resolving to reassignment). XLSX, CSV and TXT output was rendered in Chromium with
+JavaScript off and checked by eye. Not verified: the Compose/Android parts (print adapter, reader sheets) are
+uncompiled, since the Android SDK is blocked here.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

@@ -1,0 +1,10 @@
+Welcome to PDF Reader
+
+This sample text file shows how plain .txt files open in the app. It disappears as soon as a real text file is on your phone.
+
+What you can do with text files:
+- Read them with comfortable line spacing
+- Find any word with the search button
+- Share them with other apps
+
+Tip: CSV files (comma-separated values) open as a spreadsheet grid, just like Excel files.

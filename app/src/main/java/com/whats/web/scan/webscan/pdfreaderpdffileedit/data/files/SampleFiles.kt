@@ -23,6 +23,7 @@ class SampleFiles @Inject constructor(@ApplicationContext private val context: C
         "sample.docx" to DocType.WORD,
         "sample.xlsx" to DocType.EXCEL,
         "sample.pptx" to DocType.PPT,
+        "sample.txt" to DocType.TEXT,
     )
 
     fun list(): List<DocFile> {

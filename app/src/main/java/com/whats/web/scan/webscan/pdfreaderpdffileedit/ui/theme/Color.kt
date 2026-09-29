@@ -12,6 +12,7 @@ val TypePdf = Color(0xFFE53935)
 val TypeWord = Color(0xFF1E6FD9)
 val TypeExcel = Color(0xFF1E9E5A)
 val TypePpt = Color(0xFFF4731F)
+val TypeText = Color(0xFF607D8B)
 
 val AppBackground = Color(0xFFF6F6F6)
 val Surface = Color(0xFFFFFFFF)

@@ -14,4 +14,9 @@ fun main(args: Array<String>) {
         File(outDir, "$name.html").writeText(html)
         println("$name -> ${html.length} chars")
     }
+    val txt = TextToHtml.plain(TextToHtml.decode(File(samples, "sample.txt").readBytes()), "cut")
+    File(outDir, "sample.txt.html").writeText(txt)
+    val csv = TextToHtml.csv("Item;Price;Qty\nPen;1,50;3\n\"Note; with semicolon\";2;10\n", "cap")
+    File(outDir, "sample.csv.html").writeText(csv)
+    println("sample.txt / sample.csv converted")
 }

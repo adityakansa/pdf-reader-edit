@@ -8,6 +8,7 @@ enum class DocType(val extensions: Set<String>) {
     WORD(setOf("doc", "docx")),
     EXCEL(setOf("xls", "xlsx", "csv")),
     PPT(setOf("ppt", "pptx")),
+    TEXT(setOf("txt")),
     ;
 
     companion object {
@@ -45,5 +46,6 @@ val DocFile.mimeType: String
         "csv" -> "text/csv"
         "ppt" -> "application/vnd.ms-powerpoint"
         "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        "txt" -> "text/plain"
         else -> "application/octet-stream"
     }
