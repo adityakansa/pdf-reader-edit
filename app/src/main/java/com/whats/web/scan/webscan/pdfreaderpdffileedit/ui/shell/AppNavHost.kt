@@ -164,6 +164,9 @@ fun AppNavHost(
                     onAiSummary = { key ->
                         navController.navigate(Routes.SelectPage(key, AiMode.SUMMARY.name))
                     },
+                    onExtractText = { key ->
+                        navController.navigate(Routes.SelectPage(key, AiMode.EXTRACT_TEXT.name))
+                    },
                     onSign = { key -> navController.navigate(Routes.PlaceOnPdf(key)) },
                     onPaywall = { navController.navigate(Routes.Paywall) },
                 )

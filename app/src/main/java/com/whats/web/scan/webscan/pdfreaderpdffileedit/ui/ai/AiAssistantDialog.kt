@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +32,12 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.TranslateBlueBg
 
 /** FR-060 (S03). */
 @Composable
-fun AiAssistantDialog(onTranslate: () -> Unit, onSummary: () -> Unit, onDismiss: () -> Unit) {
+fun AiAssistantDialog(
+    onTranslate: () -> Unit,
+    onSummary: () -> Unit,
+    onExtractText: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -57,6 +63,15 @@ fun AiAssistantDialog(onTranslate: () -> Unit, onSummary: () -> Unit, onDismiss:
                     background = SummaryPurpleBg,
                     accent = SummaryPurple,
                     onClick = onSummary,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                // Plain OCR / text copy: what people use a scanner app for every day, free of the AI crown.
+                AiChoice(
+                    label = stringResource(R.string.action_extract_text_long),
+                    icon = Icons.Filled.TextSnippet,
+                    background = MaterialTheme.colorScheme.surfaceVariant,
+                    accent = MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = onExtractText,
                     modifier = Modifier.padding(top = 12.dp),
                 )
             }

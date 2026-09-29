@@ -15,7 +15,7 @@
     <string name="cd_select">Select files</string>
     <string name="cd_back">Back</string>
     <string name="cd_more">More options</string>
-    <string name="cd_favourite">Favourite</string>
+    <string name="cd_favourite">Add to favourites</string>
 
     <!-- Chips -->
     <string name="chip_all">All</string>
@@ -152,6 +152,15 @@
     <string name="crop_apply">Apply</string>
     <string name="action_add_page">Add page</string>
     <string name="save_as_title">Save as PDF</string>
+    <string name="view_title">View</string>
+    <string name="view_list">List</string>
+    <string name="view_grid">Grid</string>
+    <string name="cd_password_protected">Password protected</string>
+    <string name="cd_unfavourite">Remove from favourites</string>
+    <plurals name="page_count">
+        <item quantity="one">%1$d page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
     <string name="save_as_name">File name</string>
     <string name="camera_permission_body">Scanning needs the camera. You can allow it in Settings.</string>
     <string name="open_settings">Open settings</string>
@@ -194,6 +203,10 @@
     <string name="copied">Copied</string>
     <string name="quit_translating">Quit Translating</string>
     <string name="quit_summarizing">Quit Summarizing</string>
+    <string name="quit_extracting">Quit Extracting</string>
+    <string name="extract_title">Extract text</string>
+    <string name="action_extract_text">Extract text</string>
+    <string name="action_extract_text_long">Extract text (OCR)</string>
     <string name="quit_message">Are you sure you want to quit and discard the changes?</string>
     <string name="action_quit">Quit</string>
     <string name="ai_no_text">No readable text on this page</string>

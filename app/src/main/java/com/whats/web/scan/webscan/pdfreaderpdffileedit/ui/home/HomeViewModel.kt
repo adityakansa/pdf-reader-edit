@@ -9,6 +9,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileIndex
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.FileRepository
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.LibraryFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.StorageAccess
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.AppPreferences
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.prefs.SortOrder
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.pdf.PdfAccess
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.HomeTab
@@ -32,6 +33,8 @@ data class HomeUiState(
     val sort: SortOrder = SortOrder(),
     /** The phone is still being searched for documents. */
     val scanning: Boolean = false,
+    /** Page-preview grid instead of the list. */
+    val grid: Boolean = false,
 )
 
 @HiltViewModel
@@ -40,6 +43,7 @@ class HomeViewModel @Inject constructor(
     private val index: FileIndex,
     private val storageAccess: StorageAccess,
     private val pdfAccess: PdfAccess,
+    private val prefs: AppPreferences,
     entitlement: Entitlement,
 ) : ViewModel() {
     private val tab = MutableStateFlow(HomeTab.DOCUMENT)
@@ -51,14 +55,14 @@ class HomeViewModel @Inject constructor(
         combine(repository.all, repository.recents, repository.favourites) { all, recents, favourites ->
             Triple(all, recents, favourites)
         },
-        combine(tab, filter) { t, f -> t to f },
+        combine(tab, filter, prefs.libraryGrid) { t, f, g -> Triple(t, f, g) },
         combine(selection, selectionMode) { s, m -> s to m },
         entitlement.isPro,
         combine(storageAccess.state, index.scanning) { access, scanning -> access to scanning },
     ) { lists, tabFilter, sel, isPro, accessScanning ->
         val (access, scanning) = accessScanning
         val (all, recents, favourites) = lists
-        val (currentTab, currentFilter) = tabFilter
+        val (currentTab, currentFilter, grid) = tabFilter
         val source = when (currentTab) {
             HomeTab.RECENT -> recents
             HomeTab.FAVOURITE -> favourites
@@ -74,6 +78,7 @@ class HomeViewModel @Inject constructor(
             hasStorageAccess = access.hasFullAccess || access.grantedTrees.isNotEmpty() ||
                 access.grantedFiles.isNotEmpty(),
             scanning = scanning,
+            grid = grid,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -89,6 +94,8 @@ class HomeViewModel @Inject constructor(
     fun toggleFavourite(key: String) = viewModelScope.launch { repository.toggleFavourite(key) }
 
     fun markOpened(key: String) = viewModelScope.launch { repository.markOpened(key) }
+
+    fun setGrid(grid: Boolean) = viewModelScope.launch { prefs.setLibraryGrid(grid) }
 
     fun setSort(order: SortOrder) = viewModelScope.launch { repository.setSortOrder(order) }
 

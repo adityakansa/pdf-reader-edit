@@ -25,6 +25,7 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     private val explainerKey = booleanPreferencesKey("storage_explainer_shown")
     private val proKey = booleanPreferencesKey("is_pro")
     private val samplesKey = booleanPreferencesKey("samples_installed")
+    private val gridKey = booleanPreferencesKey("library_grid")
 
     val sortOrder: Flow<SortOrder> = context.dataStore.data.map { p ->
         SortOrder(
@@ -37,6 +38,11 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
 
     /** Cached entitlement so Pro survives an offline start (FR-084). */
     val isProCached: Flow<Boolean> = context.dataStore.data.map { it[proKey] ?: false }
+
+    /** List (default) or grid of page previews in the library. */
+    val libraryGrid: Flow<Boolean> = context.dataStore.data.map { it[gridKey] ?: false }
+
+    suspend fun setLibraryGrid(grid: Boolean) = context.dataStore.edit { it[gridKey] = grid }
 
     val samplesInstalled: Flow<Boolean> = context.dataStore.data.map { it[samplesKey] ?: false }
 

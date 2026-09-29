@@ -49,10 +49,7 @@ fun AiResultScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(
-                            if (state.job == AiJob.TRANSLATE) R.string.translate_title
-                            else R.string.summary_title,
-                        ),
+                        stringResource(state.job.titleRes),
                     )
                 },
                 navigationIcon = {
@@ -86,14 +83,16 @@ fun AiResultScreen(
                 TextButton(onClick = viewModel::saveAsPdf, enabled = !state.saving) {
                     Text(stringResource(R.string.action_save_pdf))
                 }
-                TextButton(
-                    onClick = {
-                        Intents.reportAiContent(
-                            context,
-                            "AI output report — ${state.sourceName}",
-                        )
-                    },
-                ) { Text(stringResource(R.string.action_report)) }
+                if (state.job.isGenerative) {
+                    TextButton(
+                        onClick = {
+                            Intents.reportAiContent(
+                                context,
+                                "AI output report — ${state.sourceName}",
+                            )
+                        },
+                    ) { Text(stringResource(R.string.action_report)) }
+                }
             }
         },
     ) { padding ->
@@ -104,12 +103,14 @@ fun AiResultScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
         ) {
-            Text(
-                stringResource(R.string.ai_disclaimer),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            if (state.job.isGenerative) {
+                Text(
+                    stringResource(R.string.ai_disclaimer),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+            }
             SelectionContainer {
                 Text(state.text, style = MaterialTheme.typography.bodyLarge)
             }

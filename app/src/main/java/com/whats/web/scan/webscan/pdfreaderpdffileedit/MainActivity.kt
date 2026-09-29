@@ -8,7 +8,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.CompositionLocalProvider
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.IncomingFile
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.Thumbnails
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.LocalThumbnails
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.AppNavHost
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.shell.ShellViewModel
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.AppTheme
@@ -23,14 +26,19 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var incoming: IncomingFile
 
+    @Inject
+    lateinit var thumbnails: Thumbnails
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
-            AppTheme {
-                AppNavHost(viewModel = viewModel)
+            CompositionLocalProvider(LocalThumbnails provides thumbnails) {
+                AppTheme {
+                    AppNavHost(viewModel = viewModel)
+                }
             }
         }
         viewModel.onStart(this)

@@ -37,7 +37,7 @@ class AiResultViewModel @Inject constructor(
         _state.value = current.copy(saving = true)
         viewModelScope.launch {
             val title = "${current.sourceName.substringBeforeLast('.')} - " +
-                if (current.job == AiJob.TRANSLATE) "translation" else "summary"
+                current.job.fileSuffix
             val output = runCatching { textToPdf.save(title, current.text) }.getOrNull()
             output?.let { incoming.offer(it.uri, "application/pdf") }
             _state.value = _state.value.copy(saving = false)

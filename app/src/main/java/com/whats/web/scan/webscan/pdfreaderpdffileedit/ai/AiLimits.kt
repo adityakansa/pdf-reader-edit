@@ -12,6 +12,8 @@ import javax.inject.Singleton
 class AiLimits @Inject constructor(@ApplicationContext private val context: Context) {
 
     fun pageLimit(mode: AiJob, isPro: Boolean): Int = when {
+        // Reading text off a page is the everyday tool Adobe Scan and CamScanner give away; keep it generous.
+        mode == AiJob.EXTRACT_TEXT -> if (isPro) PRO_EXTRACT_PAGES else FREE_EXTRACT_PAGES
         !isPro -> FREE_PAGES
         mode == AiJob.SUMMARY -> PRO_SUMMARY_PAGES
         else -> PRO_TRANSLATE_PAGES
@@ -33,6 +35,8 @@ class AiLimits @Inject constructor(@ApplicationContext private val context: Cont
         const val FREE_PAGES = 1
         const val PRO_SUMMARY_PAGES = 10
         const val PRO_TRANSLATE_PAGES = 50
+        const val FREE_EXTRACT_PAGES = 5
+        const val PRO_EXTRACT_PAGES = 100
 
         /** Words of page text a summary prompt is truncated to, so prompt + output fit 4,096 tokens. */
         const val SUMMARY_MAX_WORDS = 2_500
@@ -41,5 +45,15 @@ class AiLimits @Inject constructor(@ApplicationContext private val context: Cont
     }
 }
 
-/** Which AI job is running; the select-page and result screens are shared between them. */
-enum class AiJob { TRANSLATE, SUMMARY }
+/**
+ * Which job is running; the select-page, run and result screens are shared between them.
+ * [EXTRACT_TEXT] is plain OCR / text-layer copy ("image to text"), so its result carries no AI label.
+ */
+enum class AiJob {
+    TRANSLATE,
+    SUMMARY,
+    EXTRACT_TEXT,
+    ;
+
+    val isGenerative: Boolean get() = this != EXTRACT_TEXT
+}

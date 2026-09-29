@@ -115,9 +115,7 @@ fun AiRunScreen(
                     )
                 }
                 Text(
-                    stringResource(
-                        if (job == AiJob.TRANSLATE) R.string.translate_title else R.string.summary_title,
-                    ),
+                    stringResource(job.titleRes),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -146,13 +144,11 @@ fun AiRunScreen(
                     onClick = { viewModel.run(onResult) },
                     enabled = !state.running &&
                         !state.summaryUnsupported &&
-                        (job == AiJob.SUMMARY || state.target != null),
+                        (job != AiJob.TRANSLATE || state.target != null),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        stringResource(
-                            if (job == AiJob.TRANSLATE) R.string.action_translate else R.string.action_summarize,
-                        ),
+                        stringResource(job.actionRes),
                     )
                 }
             }
@@ -409,9 +405,7 @@ fun QuitDialog(job: AiJob, onQuit: () -> Unit, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = {
             Text(
-                stringResource(
-                    if (job == AiJob.TRANSLATE) R.string.quit_translating else R.string.quit_summarizing,
-                ),
+                stringResource(job.quitRes),
             )
         },
         text = { Text(stringResource(R.string.quit_message)) },

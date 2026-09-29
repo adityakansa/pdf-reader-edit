@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.outlined.StarBorder
@@ -82,6 +83,7 @@ fun PdfReaderScreen(
     onBack: () -> Unit,
     onAiTranslate: (String) -> Unit,
     onAiSummary: (String) -> Unit,
+    onExtractText: (String) -> Unit,
     onSign: (String) -> Unit,
     onPaywall: () -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
@@ -212,6 +214,11 @@ fun PdfReaderScreen(
                             text = { Text(stringResource(R.string.action_ai_summary)) },
                             leadingIcon = { Icon(Icons.Filled.AutoAwesome, contentDescription = null) },
                             onClick = { menuOpen = false; onAiSummary(key) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_extract_text_long)) },
+                            leadingIcon = { Icon(Icons.Filled.TextSnippet, contentDescription = null) },
+                            onClick = { menuOpen = false; onExtractText(key) },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_highlight)) },

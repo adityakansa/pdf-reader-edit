@@ -16,7 +16,10 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -45,10 +48,36 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.theme.BrandRed
 /** FR-014 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SortSheet(current: SortOrder, onPick: (SortOrder) -> Unit, onDismiss: () -> Unit) {
+fun SortSheet(
+    grid: Boolean,
+    onGrid: (Boolean) -> Unit,
+    current: SortOrder,
+    onPick: (SortOrder) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var order by remember { mutableStateOf(current) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
+            // View first: list or page previews, as Adobe Scan offers on "All scans".
+            Text(
+                stringResource(R.string.view_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+                FilterChip(
+                    selected = !grid,
+                    onClick = { onGrid(false) },
+                    label = { Text(stringResource(R.string.view_list)) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.ViewList, contentDescription = null) },
+                )
+                FilterChip(
+                    selected = grid,
+                    onClick = { onGrid(true) },
+                    label = { Text(stringResource(R.string.view_grid)) },
+                    leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null) },
+                )
+            }
             Text(
                 stringResource(R.string.sort_title),
                 style = MaterialTheme.typography.titleMedium,

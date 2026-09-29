@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -55,6 +58,7 @@ import com.whats.web.scan.webscan.pdfreaderpdffileedit.ads.BannerAd
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocFile
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.DocType
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.data.files.mimeType
+import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileCard
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.FileRow
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.Intents
 import com.whats.web.scan.webscan.pdfreaderpdffileedit.ui.components.TypeChips
@@ -207,6 +211,8 @@ fun HomeScreen(
 
     if (showSort) {
         SortSheet(
+            grid = state.grid,
+            onGrid = viewModel::setGrid,
             current = sortOrder,
             onPick = {
                 sortOrder = it
@@ -226,6 +232,7 @@ fun HomeScreen(
         AiAssistantDialog(
             onTranslate = { showAi = false; onAi(AiMode.TRANSLATE) },
             onSummary = { showAi = false; onAi(AiMode.SUMMARY) },
+            onExtractText = { showAi = false; onAi(AiMode.EXTRACT_TEXT) },
             onDismiss = { showAi = false },
         )
     }
@@ -285,22 +292,49 @@ private fun LibraryList(
             EmptyState(state, onStorageAccess, onScan, onImageToPdf)
             return@Column
         }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-            contentPadding = PaddingValues(bottom = 96.dp),
-        ) {
-            items(state.files, key = { it.file.key }) { item ->
-                FileRow(
-                    item = item,
-                    onOpen = { onOpen(item.file) },
-                    onToggleFavourite = { onToggleFavourite(item.file) },
-                    onMenu = { onMenu(item.file) },
-                    selectionMode = state.selectionMode,
-                    selected = item.file.key in state.selected,
-                    onLongPress = { onLongPress(item.file) },
-                )
+        if (state.grid) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(150.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 96.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                gridItems(state.files, key = { it.file.key }) { item ->
+                    FileCard(
+                        item = item,
+                        onOpen = { onOpen(item.file) },
+                        onToggleFavourite = { onToggleFavourite(item.file) },
+                        onMenu = { onMenu(item.file) },
+                        selectionMode = state.selectionMode,
+                        selected = item.file.key in state.selected,
+                        onLongPress = { onLongPress(item.file) },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface),
+                contentPadding = PaddingValues(bottom = 96.dp),
+            ) {
+                items(state.files, key = { it.file.key }) { item ->
+                    FileRow(
+                        item = item,
+                        onOpen = { onOpen(item.file) },
+                        onToggleFavourite = { onToggleFavourite(item.file) },
+                        onMenu = { onMenu(item.file) },
+                        selectionMode = state.selectionMode,
+                        selected = item.file.key in state.selected,
+                        onLongPress = { onLongPress(item.file) },
+                        // Rows slide into place when the sort order, a chip or a delete changes the list.
+                        modifier = Modifier.animateItem(),
+                    )
+                }
             }
         }
     }

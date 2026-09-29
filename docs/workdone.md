@@ -207,6 +207,34 @@ Chromium with JavaScript disabled (Playwright). Tapping the second tab showed th
 Resource and brace checks pass. Not verified: no Android build or device run; `FileNamesTest` and
 `XlsxColumnTest` have not been run.
 
+## Step 10a — Adobe Scan–style file list, grid view, Extract text (2026-09-29)
+
+Based on `docs/COMPETITIVE_ANALYSIS.md` (the web research on Adobe Scan, CamScanner and open-source scanners, with sources).
+
+- **File list like Adobe Scan.** Every row now shows the document's first page in a small paper frame (48×62 dp),
+  the name on up to two lines, and `date • size • n pages`. The type badge sits on the corner of the preview, and
+  a lock marks password-protected PDFs. Until a preview is ready, or when a file has none, the coloured type tile
+  stands in, so rows never change shape. Selected rows are tinted. The divider is inset past the preview.
+- **`data/files/Thumbnails`**: page 1 through `PdfRenderer` at 180 px. Office files use the
+  `docProps/thumbnail.jpeg` Word and PowerPoint embed, read by streaming the zip, never unpacking it.
+  Previews are cached in memory (12 MB LRU) and as JPEGs in `cacheDir/thumbs`, keyed on SHA-1(key|size|modified),
+  so an edited file gets a new preview. The page count is cached with them. At most 2 renders run at once, and
+  encrypted PDFs return `locked` instead of throwing. It is provided to the UI through `LocalThumbnails` from `MainActivity`.
+- **Grid view.** A List / Grid switch at the top of the sort sheet, saved in DataStore (`library_grid`).
+  Grid cards show a large page preview, name, date and ⋮, with the selection check at top-left.
+- **Motion.** List and grid items use `animateItem()`, so sorting, filtering and deleting move rows instead of
+  jumping. Previews fade in (`AnimatedContent`).
+- **Extract text (OCR)**, the "image to text" feature Adobe Scan and CamScanner have. New `AiJob.EXTRACT_TEXT`,
+  from the AI Assistant dialog (third option) and the reader's ⋮ menu. It reuses page select → run → result.
+  The text comes from the PDF text layer, or from ML Kit Latin OCR on scanned pages. Limits: free 5 pages, Pro 100.
+  Its result has no "AI-generated" label and no Report button (`AiJob.isGenerative`). Every screen names jobs
+  through `ui/ai/AiJobLabels.kt`, so a new job cannot fall into the "Summary" wording.
+- Accessibility: the favourite star now says "Add to favourites" / "Remove from favourites".
+
+Checks run (no compiler available): all `R.string`/`R.plurals` referenced exist, `strings.xml` parses, braces
+balance, and every `Icons.*` used has its import. Not verified: no Android build or device run. Thumbnail
+speed on a phone with thousands of PDFs is unmeasured.
+
 ## State of the repo (2026-09-29)
 
 - Fresh Android Studio template (no Activity). Not a git repository yet.

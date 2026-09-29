@@ -200,6 +200,8 @@ class AiViewModel @Inject constructor(
                         }
                     }
 
+                    AiJob.EXTRACT_TEXT -> text
+
                     AiJob.SUMMARY -> summaryEngine.summarise(text)
                         .onEach { update -> _state.value = _state.value.copy(streamingText = update.text) }
                         .first { it.finished }
